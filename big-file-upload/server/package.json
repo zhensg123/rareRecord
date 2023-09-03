@@ -1,0 +1,17 @@
+{
+  "name": "myapp",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon index"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "~4.16.1",
+    "fs-extra": "^11.1.1",
+    "multiparty": "^4.2.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
