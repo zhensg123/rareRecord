@@ -166,7 +166,7 @@ app.post('/file/merge', async function (req, res, next) {
   );
 });
 app.get('/file/delete', async function (req, res, next) {
-  await fse.remove(path.resolve(UPLOAD_DIR));
+   await fse.remove(path.resolve(UPLOAD_DIR));
     res.end(
       JSON.stringify({
         code: 0,

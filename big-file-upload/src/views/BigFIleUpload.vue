@@ -278,7 +278,7 @@ export default {
         // 接口每调用一次，记录数加 1
         count++;
         const p = prmiseQueue.shift();
-        p.then((res) => {
+        p().then((res) => {
           console.log(res, 'pres')
 
           // 接口调用完成，记录数减 1
@@ -291,7 +291,9 @@ export default {
           if (prmiseQueue.length && count < LIMIT) {
             run();
           }
-        });
+        }).catch((err)=>{
+          console.log(err)
+        })
       };
 
       // 根据 limit 并发调用
@@ -311,7 +313,7 @@ export default {
 
           return { formData, index };
         })
-        .map(({ formData, index }) => {
+        .map(({ formData, index }) => ()=>{
           return new Promise((resolve, reject) => {
             axios({
               method: "post",
