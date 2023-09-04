@@ -10,6 +10,24 @@ const cors = require('cors')
 app.use(cors())
 
 const UPLOAD_DIR = path.resolve(__dirname, ".", "target");
+// 提取后缀名
+// get file extension
+const extractExt = fileName => fileName.slice(fileName.lastIndexOf("."), fileName.length);
+
+// 创建临时文件夹用于临时存储 chunk
+// 添加 chunkDir 前缀与文件名做区分
+// create a directory for temporary storage of chunks
+// add the 'chunkDir' prefix to distinguish it from the chunk name
+const getChunkDir = fileHash =>
+  path.resolve(UPLOAD_DIR, `chunkDir_${fileHash}`);
+
+
+// 返回已上传的所有切片名
+// return chunk names which is uploaded
+const createUploadedList = async fileHash =>
+  fse.existsSync(getChunkDir(fileHash))
+    ? await fse.readdir(getChunkDir(fileHash))
+    : [];
 
 const resolvePost = req =>
   new Promise(resolve => {
@@ -34,8 +52,8 @@ const pipeStream = (path, writeStream) =>
   });
 
 // 合并切片
-const mergeFileChunk = async (filePath, fileName, size) => {
-  const chunkDir = path.resolve(UPLOAD_DIR, `${fileName}-chunks`);
+const mergeFileChunk = async (filePath, fileHash, size) => {
+  const chunkDir = getChunkDir(fileHash);
   // 读取所有chunk路径
   const chunkPaths = await fse.readdir(chunkDir);
   // 根据切片下标进行排序
@@ -60,20 +78,50 @@ const mergeFileChunk = async (filePath, fileName, size) => {
 
 
 app.post('/file/upload', function (req, res, next) {
+
   const multipart = new multiparty.Form();
   multipart.parse(req, async function (err, fields, files) {
-    const [chunk] = files.chunk
-    const [fileName] = fields.fileName
-    const [chunkName] = fields.chunkName
-    // path.resolve 将相对路径解析为绝对路径
-    const chunkDir = path.resolve(UPLOAD_DIR, `${fileName}-chunks`)
-    if (!fse.existsSync(chunkDir)) {
-      await fse.mkdirs(chunkDir)
-    }
+      if(err){
+        res.status = 500
+        res.end("异常错误");
+        return
+      }
+      const [chunk] = files.chunk;
+      const [hash] = fields.hash; // 切片hash
+      const [fileHash] = fields.fileHash;
+      const [fileName] = fields.fileName;
+      // 获取文件路径
+      const filePath = path.resolve(
+        UPLOAD_DIR,
+        `${fileHash}${extractExt(fileName)}`
+      );
+      // path.resolve 将相对路径解析为绝对路径 切片名改为fileHash
+      const chunkDir = getChunkDir(fileHash);
+      const chunkPath = path.resolve(chunkDir, hash);
+
+      // 文件存在直接返回
+      // return if file is exists
+      if (fse.existsSync(filePath)) {
+        res.end("file exist");
+        return;
+      }
+
+      // 切片存在直接返回
+      // return if chunk is exists
+      if (fse.existsSync(chunkPath)) {
+        res.end("chunk exist");
+        return;
+      }
+
+      // 切片目录不存在，创建切片目录
+      // if chunk directory is not exist, create it
+      if (!fse.existsSync(chunkDir)) {
+        await fse.mkdirs(chunkDir);
+      }
 
     try {
       // fs-extra 的 move 方法用于移动文件或目录。
-      await fse.move(chunk.path, `${chunkDir}/${chunkName}`)
+      await fse.move(chunk.path, path.resolve(chunkDir, hash));
     } catch (err) {
       console.log(err)
     }
@@ -81,11 +129,35 @@ app.post('/file/upload', function (req, res, next) {
   });
 });
 
+
+
+
+app.post('/file/verify', async function (req, res, next) {
+  const data = await resolvePost(req);
+  const { fileHash, fileName } = data;
+  const ext = extractExt(fileName);
+  const filePath = path.resolve(UPLOAD_DIR, `${fileHash}${ext}`);
+  if (fse.existsSync(filePath)) {
+    res.end(
+      JSON.stringify({
+        shouldUpload: false
+      })
+    );
+  } else {
+    res.end(
+      JSON.stringify({
+        shouldUpload: true,
+        uploadedList: await createUploadedList(fileHash)
+      })
+    );
+  }
+});
 app.post('/file/merge', async function (req, res, next) {
   const data = await resolvePost(req);
-  const { fileName, size } = data;
-  const filePath = path.resolve(UPLOAD_DIR, `${fileName}`);
-  await mergeFileChunk(filePath, fileName, size);
+  const { fileHash, fileName, size } = data;
+  const ext = extractExt(fileName);
+  const filePath = path.resolve(UPLOAD_DIR, `${fileHash}${ext}`);
+  await mergeFileChunk(filePath, fileHash, size);
   res.end(
     JSON.stringify({
       code: 0,
@@ -93,8 +165,19 @@ app.post('/file/merge', async function (req, res, next) {
     })
   );
 });
+app.get('/file/delete', async function (req, res, next) {
+  await fse.remove(path.resolve(UPLOAD_DIR));
+    res.end(
+      JSON.stringify({
+        code: 0,
+        message: "file delete success"
+      })
+    );
+});
 
-
+app.get('/test', async function (req, res, next) {
+   res.send('测试2')
+});
 app.listen(3000, function () {
   console.log('hello world')
 })

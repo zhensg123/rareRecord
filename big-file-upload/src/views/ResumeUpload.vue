@@ -60,10 +60,7 @@ export default {
   name: "BigFIleUpload",
   components: {},
   data() {
-    // save request list
     this.chunkRequestList = []
-
-    // save uploaded file list
     this.uploadedList = []
     return {
       Status,
@@ -147,7 +144,6 @@ export default {
       this.$message.success("删除成功");
     },
     resetUploadData() {
-      // 取消请求
       this.chunkRequestList.forEach((cancel) => cancel());
       this.chunkRequestList = [];
       if (this.fileData.worker) {
@@ -329,7 +325,6 @@ export default {
               }),
             })
               .then((res) => {
-                // 去除请求
                 if (this.chunkRequestList) {
                   this.chunkRequestList.splice(index, 1);
                 }
