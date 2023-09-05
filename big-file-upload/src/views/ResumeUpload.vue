@@ -218,7 +218,7 @@ export default {
 
           return { formData, index };
         })
-        .map(({ formData, index }) => {
+        .map(({ formData, index }) => ()=>{
           return new Promise((resolve, reject) => {
             axios({
               method: "post",

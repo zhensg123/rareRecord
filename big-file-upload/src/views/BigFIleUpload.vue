@@ -279,7 +279,7 @@ export default {
         // 接口每调用一次，记录数加 1
         count++;
         const p = prmiseQueue.shift();
-        p.then((res) => {
+        p().then((res) => {
 
           // 接口调用完成，记录数减 1
           count--;
@@ -311,7 +311,7 @@ export default {
 
           return { formData, index };
         })
-        .map(({ formData, index }) => {
+        .map(({ formData, index }) => ()=>{
           return new Promise((resolve, reject) => {
             axios({
               method: "post",
