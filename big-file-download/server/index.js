@@ -1,178 +1,69 @@
 const express = require('express');
 const app = express();
 
-const multiparty = require("multiparty");
 const path = require('path');
 const fse = require("fs-extra");
+const Result = require("./Result");
 
 // 跨域设置
 const cors = require('cors')
 app.use(cors())
 
-const UPLOAD_DIR = path.resolve(__dirname, ".", "target");
+const UPLOAD_DIR = path.resolve(__dirname, ".", "resource");
 // 提取后缀名
 // get file extension
 const extractExt = fileName => fileName.slice(fileName.lastIndexOf("."), fileName.length);
 
-// 创建临时文件夹用于临时存储 chunk
-// 添加 chunkDir 前缀与文件名做区分
-// create a directory for temporary storage of chunks
-// add the 'chunkDir' prefix to distinguish it from the chunk name
-const getChunkDir = fileHash =>
-  path.resolve(UPLOAD_DIR, `chunkDir_${fileHash}`);
 
 
-// 返回已上传的所有切片名
-// return chunk names which is uploaded
-const createUploadedList = async fileHash =>
-  fse.existsSync(getChunkDir(fileHash))
-    ? await fse.readdir(getChunkDir(fileHash))
-    : [];
+app.get('/file/down', function (req, res, next) {
+  const {fileName} = req.query
+  const file = path.resolve(UPLOAD_DIR, fileName);
+  fse.stat(file).then(stat => {
+    const fileSize = stat.size;
+    const range = req.headers.range;
 
-const resolvePost = req =>
-  new Promise(resolve => {
-    let chunk = "";
-    req.on("data", data => {
-      chunk += data;
-    });
-    req.on("end", () => {
-      resolve(JSON.parse(chunk));
-    });
-  });
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize-1;
 
-// 写入文件流
-const pipeStream = (path, writeStream) =>
-  new Promise(resolve => {
-    const readStream = fse.createReadStream(path);
-    readStream.on("end", () => {
-      fse.unlinkSync(path);
-      resolve();
-    });
-    readStream.pipe(writeStream);
-  });
+      const chunksize = (end-start)+1;
+      const stream = fse.createReadStream(file, {start, end});
+      const head = {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': 'application/zip',
+      };
 
-// 合并切片
-const mergeFileChunk = async (filePath, fileHash, size) => {
-  const chunkDir = getChunkDir(fileHash);
-  // 读取所有chunk路径
-  const chunkPaths = await fse.readdir(chunkDir);
-  // 根据切片下标进行排序
-  // 使用下面的方式有问题
-  // chunkPaths.sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
-  chunkPaths.sort((a, b) => parseInt(a.split('-').pop()) - parseInt(b.split('-').pop()));
-  // 并发写入文件
-  await Promise.all(
-    chunkPaths.map((chunkPath, index) =>
-      pipeStream(
-        path.resolve(chunkDir, chunkPath),
-        // 根据 size 在指定位置创建可写流
-        fse.createWriteStream(filePath, {
-          start: index * size,
-        })
-      )
-    )
-  );
-  // 合并后删除保存切片的目录
-  fse.rmdirSync(chunkDir);
-};
-
-
-app.post('/file/upload', function (req, res, next) {
-
-  const multipart = new multiparty.Form();
-  multipart.parse(req, async function (err, fields, files) {
-      if(err){
-        res.status = 500
-        res.end("异常错误");
-        return
-      }
-      const [chunk] = files.chunk;
-      const [hash] = fields.hash; // 切片hash
-      const [fileHash] = fields.fileHash;
-      const [fileName] = fields.fileName;
-      // 获取文件路径
-      const filePath = path.resolve(
-        UPLOAD_DIR,
-        `${fileHash}${extractExt(fileName)}`
-      );
-      // path.resolve 将相对路径解析为绝对路径 切片名改为fileHash
-      const chunkDir = getChunkDir(fileHash);
-      const chunkPath = path.resolve(chunkDir, hash);
-
-      // 文件存在直接返回
-      // return if file is exists
-      if (fse.existsSync(filePath)) {
-        res.end("file exist");
-        return;
-      }
-
-      // 切片存在直接返回
-      // return if chunk is exists
-      if (fse.existsSync(chunkPath)) {
-        res.end("chunk exist");
-        return;
-      }
-
-      // 切片目录不存在，创建切片目录
-      // if chunk directory is not exist, create it
-      if (!fse.existsSync(chunkDir)) {
-        await fse.mkdirs(chunkDir);
-      }
-
-    try {
-      // fs-extra 的 move 方法用于移动文件或目录。
-      await fse.move(chunk.path, path.resolve(chunkDir, hash));
-    } catch (err) {
-      console.log(err)
+      res.writeHead(206, head);
+      stream.pipe(res);
+    } else {
+      const head = {
+        'Content-Length': fileSize,
+        'Content-Type': 'application/zip',
+      };
+      res.writeHead(200, head);
+      fse.createReadStream(file).pipe(res);
     }
-    res.end("received file chunk");
   });
 });
 
 
 
+app.get('/file/getFileSize', async function (req, res, next) {
+  const {fileName} = req.query
 
-app.post('/file/verify', async function (req, res, next) {
-  const data = await resolvePost(req);
-  const { fileHash, fileName } = data;
-  const ext = extractExt(fileName);
-  const filePath = path.resolve(UPLOAD_DIR, `${fileHash}${ext}`);
-  if (fse.existsSync(filePath)) {
-    res.end(
-      JSON.stringify({
-        shouldUpload: false
-      })
-    );
-  } else {
-    res.end(
-      JSON.stringify({
-        shouldUpload: true,
-        uploadedList: await createUploadedList(fileHash)
-      })
-    );
-  }
-});
-app.post('/file/merge', async function (req, res, next) {
-  const data = await resolvePost(req);
-  const { fileHash, fileName, size } = data;
-  const ext = extractExt(fileName);
-  const filePath = path.resolve(UPLOAD_DIR, `${fileHash}${ext}`);
-  await mergeFileChunk(filePath, fileHash, size);
-  res.end(
-    JSON.stringify({
-      code: 0,
-      message: "file merged success"
-    })
-  );
-});
-app.get('/file/delete', async function (req, res, next) {
-   await fse.remove(path.resolve(UPLOAD_DIR));
-    res.end(
-      JSON.stringify({
-        code: 0,
-        message: "file delete success"
-      })
-    );
+  const file = path.resolve(UPLOAD_DIR, fileName);
+// 通常情况下，我们会认为1KB等于1000字节，1MB等于1000KB，但在计算机中，1KB等于1024字节，1MB等于1024KB。
+// 所以，如果磁盘显示的大小为30.9MB，那么实际的字节数应该是30.9 * 1024 * 1024，大约等于32400998字节。
+// 但是，有些操作系统或软件在显示存储大小时，可能会使用1000作为转换系数，这就可能导致显示的大小和实际的大小有所不同。这也是为什么你看到的大小是30.9M，但实际的字节数是30858587字节。
+// 总的来说，这是一个常见的混淆点，你需要根据具体的情况来判断应该使用哪个转换系数
+  const {size} = await fse.stat(file)
+  res.send(Result.success({
+    fileSize: size
+  }))
 });
 
 app.get('/test', async function (req, res, next) {
