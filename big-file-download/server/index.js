@@ -12,8 +12,6 @@ app.use(cors())
 const UPLOAD_DIR = path.resolve(__dirname, ".", "resource");
 // 提取后缀名
 // get file extension
-const extractExt = fileName => fileName.slice(fileName.lastIndexOf("."), fileName.length);
-
 
 
 app.get('/file/down', function (req, res, next) {
@@ -23,30 +21,21 @@ app.get('/file/down', function (req, res, next) {
     const fileSize = stat.size;
     const range = req.headers.range;
 
-    if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize-1;
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize-1;
 
-      const chunksize = (end-start)+1;
-      const stream = fse.createReadStream(file, {start, end});
-      const head = {
+    const chunksize = (end-start)+1;
+    const stream = fse.createReadStream(file, {start, end});
+    const head = {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
         'Content-Type': 'application/zip',
-      };
+    };
 
-      res.writeHead(206, head);
-      stream.pipe(res);
-    } else {
-      const head = {
-        'Content-Length': fileSize,
-        'Content-Type': 'application/zip',
-      };
-      res.writeHead(200, head);
-      fse.createReadStream(file).pipe(res);
-    }
+    res.writeHead(206, head);
+    stream.pipe(res);
   });
 });
 
@@ -54,7 +43,6 @@ app.get('/file/down', function (req, res, next) {
 
 app.get('/file/getFileSize', async function (req, res, next) {
   const {fileName} = req.query
-
   const file = path.resolve(UPLOAD_DIR, fileName);
 // 通常情况下，我们会认为1KB等于1000字节，1MB等于1000KB，但在计算机中，1KB等于1024字节，1MB等于1024KB。
 // 所以，如果磁盘显示的大小为30.9MB，那么实际的字节数应该是30.9 * 1024 * 1024，大约等于32400998字节。

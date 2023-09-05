@@ -35,15 +35,6 @@ export default {
       });
     },
     concatenate(arrays) {
-      // if (!arrays.length) return null;
-      // let totalLength = arrays.reduce((acc, value) => acc + value.length, 0);
-      // let result = new Uint8Array(totalLength);
-      // let length = 0;
-      // for (let array of arrays) {
-      //   result.set(array, length);
-      //   length += array.length;
-      // }
-      // return result;
       return arrays.reduce((acc, val) => {
         let tmp = new Uint8Array(acc.length + val.length);
         tmp.set(acc, 0);
@@ -56,7 +47,6 @@ export default {
       const { fileSize } = data.data;
       this.fileSize = fileSize
       const fileChunkNum = Math.ceil(fileSize / fileChunkSize)
-      console.log(fileChunkNum, fileSize, fileSize / 1024/1024, 'requestList')
 
       const requestList = this.generateChunkRequest(fileChunkNum, fileChunkSize)
       this.requestWithLimit(requestList, ()=>{
@@ -127,7 +117,6 @@ export default {
           responseType: "arraybuffer",
         })
           .then((res) => {
-            console.log(res, i)
             this.fileChunkResults.push({
               buffer: res.data,
               index: i
@@ -139,9 +128,6 @@ export default {
           });
       });
     },
-  },
-  created() {
-    // this.getFileContentLength();
-  },
+  }
 };
 </script>
