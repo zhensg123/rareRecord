@@ -29,7 +29,7 @@
       </el-form-item>
     </el-form>
     <el-table :data="uploadChunkData" style="width: 100%">
-      <el-table-column prop="chunkHash" label="chunk hash" width="400">
+      <el-table-column prop="hash" label="chunk hash" width="400">
       </el-table-column>
       <el-table-column prop="size" label="size(Mb)" width="180">
         <template slot-scope="{ row }">
@@ -60,10 +60,7 @@ export default {
   name: "BigFIleUpload",
   components: {},
   data() {
-    // save request list
     this.chunkRequestList = []
-
-    // save uploaded file list
     this.uploadedList = []
     return {
       Status,
@@ -142,12 +139,11 @@ export default {
         method: "get",
         url: "http://localhost:3000/file/delete",
       });
-      this.$refs.fileUploadInput.value = this.fileData.file =  null;
+      this.$refs.fileUploadInput.value = this.fileData.file =  "";
       this.status = Status.wait;
       this.$message.success("删除成功");
     },
     resetUploadData() {
-      // 取消请求
       this.chunkRequestList.forEach((cancel) => cancel());
       this.chunkRequestList = [];
       if (this.fileData.worker) {
@@ -232,10 +228,11 @@ export default {
       this.uploadedList = uploadedList
       // 创建上传切片数据
       this.uploadChunkData = chunkList
+        .filter(({ hash }) => !this.uploadedList.includes(hash))
         .map(({ file }, index) => ({
           fileHash: this.fileData.fileHash,
           chunk: file, // 切片文件
-          chunkHash:  `${this.fileData.fileHash}-${index}`,
+          hash:  `${this.fileData.fileHash}-${index}`,
           percentage: this.uploadedList.includes(index) ? 100 : 0,
           size: file.size,
           index,
@@ -267,9 +264,7 @@ export default {
           fileHash: this.fileData.fileHash,
           fileName: this.getFileNameAndExt().fileName,
         }),
-      }).then(()=>{
-        this.$message.success('上传成功')
-      })
+      });
     },
     requestWithLimit(prmiseQueue, callback = null) {
       // 请求数量记录，默认为 0
@@ -279,11 +274,8 @@ export default {
         // 接口每调用一次，记录数加 1
         count++;
         const p = prmiseQueue.shift();
-        p().then((res) => {
-<<<<<<< HEAD
-=======
+        p.then((res) => {
           console.log(res, 'pres')
->>>>>>> 8b56c82e2347ecc2041bb429f2402a1604fa270b
 
           // 接口调用完成，记录数减 1
           count--;
@@ -295,9 +287,7 @@ export default {
           if (prmiseQueue.length && count < LIMIT) {
             run();
           }
-        }).catch((err)=>{
-          console.log(err)
-        })
+        });
       };
 
       // 根据 limit 并发调用
@@ -307,17 +297,17 @@ export default {
     },
     createChunksRequest() {
       return this.uploadChunkData
-        .filter(({ chunkHash }) => !this.uploadedList.includes(chunkHash))
-        .map(({ chunk, chunkHash, index }) => {
+        .filter(({ hash }) => !this.uploadedList.includes(hash))
+        .map(({ chunk, hash, index }) => {
           const formData = new FormData();
           formData.append("chunk", chunk);
-          formData.append("chunkHash", chunkHash);
+          formData.append("hash", hash);
           formData.append("fileName", this.getFileNameAndExt().fileName);
           formData.append("fileHash", this.fileData.fileHash);
 
           return { formData, index };
         })
-        .map(({ formData, index }) => ()=>{
+        .map(({ formData, index }) => {
           return new Promise((resolve, reject) => {
             axios({
               method: "post",
@@ -335,7 +325,6 @@ export default {
               }),
             })
               .then((res) => {
-                // 去除请求
                 if (this.chunkRequestList) {
                   this.chunkRequestList.splice(index, 1);
                 }

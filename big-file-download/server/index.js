@@ -2,8 +2,8 @@ const express = require('express');
 const app = express();
 
 const multiparty = require("multiparty");
-const path = require('path'); // 处理路径相关，不处理文件
-const fse = require("fs-extra"); // 处理文件相关
+const path = require('path');
+const fse = require("fs-extra");
 
 // 跨域设置
 const cors = require('cors')
@@ -22,6 +22,12 @@ const getChunkDir = fileHash =>
   path.resolve(UPLOAD_DIR, `chunkDir_${fileHash}`);
 
 
+// 返回已上传的所有切片名
+// return chunk names which is uploaded
+const createUploadedList = async fileHash =>
+  fse.existsSync(getChunkDir(fileHash))
+    ? await fse.readdir(getChunkDir(fileHash))
+    : [];
 
 const resolvePost = req =>
   new Promise(resolve => {
@@ -45,19 +51,9 @@ const pipeStream = (path, writeStream) =>
     readStream.pipe(writeStream);
   });
 
-  // 返回已上传的所有切片名
-// return chunk names which is uploaded
-const createUploadedList = async fileHash =>
-fse.existsSync(getChunkDir(fileHash))
-  ? await fse.readdir(getChunkDir(fileHash))
-  : [];
-
 // 合并切片
 const mergeFileChunk = async (filePath, fileHash, size) => {
-  // get chuunk path
-  // 获取切片路径
   const chunkDir = getChunkDir(fileHash);
-  // read all chunk path
   // 读取所有chunk路径
   const chunkPaths = await fse.readdir(chunkDir);
   // 根据切片下标进行排序
@@ -82,6 +78,7 @@ const mergeFileChunk = async (filePath, fileHash, size) => {
 
 
 app.post('/file/upload', function (req, res, next) {
+
   const multipart = new multiparty.Form();
   multipart.parse(req, async function (err, fields, files) {
       if(err){
@@ -90,7 +87,7 @@ app.post('/file/upload', function (req, res, next) {
         return
       }
       const [chunk] = files.chunk;
-      const [chunkHash] = fields.chunkHash; // 切片hash
+      const [hash] = fields.hash; // 切片hash
       const [fileHash] = fields.fileHash;
       const [fileName] = fields.fileName;
       // 获取文件路径
@@ -100,7 +97,7 @@ app.post('/file/upload', function (req, res, next) {
       );
       // path.resolve 将相对路径解析为绝对路径 切片名改为fileHash
       const chunkDir = getChunkDir(fileHash);
-      const chunkPath = path.resolve(chunkDir, chunkHash);
+      const chunkPath = path.resolve(chunkDir, hash);
 
       // 文件存在直接返回
       // return if file is exists
@@ -124,7 +121,7 @@ app.post('/file/upload', function (req, res, next) {
 
     try {
       // fs-extra 的 move 方法用于移动文件或目录。
-      await fse.move(chunk.path, path.resolve(chunkDir, chunkHash));
+      await fse.move(chunk.path, path.resolve(chunkDir, hash));
     } catch (err) {
       console.log(err)
     }
@@ -133,19 +130,7 @@ app.post('/file/upload', function (req, res, next) {
 });
 
 
-app.post('/file/merge', async function (req, res, next) {
-  const data = await resolvePost(req);
-  const { fileHash, fileName, size } = data;
-  const ext = extractExt(fileName);
-  const filePath = path.resolve(UPLOAD_DIR, `${fileHash}${ext}`);
-  await mergeFileChunk(filePath, fileHash, size);
-  res.end(
-    JSON.stringify({
-      code: 0,
-      message: "file merged success"
-    })
-  );
-});
+
 
 app.post('/file/verify', async function (req, res, next) {
   const data = await resolvePost(req);
@@ -167,7 +152,19 @@ app.post('/file/verify', async function (req, res, next) {
     );
   }
 });
-
+app.post('/file/merge', async function (req, res, next) {
+  const data = await resolvePost(req);
+  const { fileHash, fileName, size } = data;
+  const ext = extractExt(fileName);
+  const filePath = path.resolve(UPLOAD_DIR, `${fileHash}${ext}`);
+  await mergeFileChunk(filePath, fileHash, size);
+  res.end(
+    JSON.stringify({
+      code: 0,
+      message: "file merged success"
+    })
+  );
+});
 app.get('/file/delete', async function (req, res, next) {
    await fse.remove(path.resolve(UPLOAD_DIR));
     res.end(
