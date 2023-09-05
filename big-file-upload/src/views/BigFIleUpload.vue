@@ -29,7 +29,7 @@
       </el-form-item>
     </el-form>
     <el-table :data="uploadChunkData" style="width: 100%">
-      <el-table-column prop="hash" label="chunk hash" width="400">
+      <el-table-column prop="chunkHash" label="chunk hash" width="400">
       </el-table-column>
       <el-table-column prop="size" label="size(Mb)" width="180">
         <template slot-scope="{ row }">
@@ -142,7 +142,7 @@ export default {
         method: "get",
         url: "http://localhost:3000/file/delete",
       });
-      this.$refs.fileUploadInput.value = this.fileData.file =  "";
+      this.$refs.fileUploadInput.value = this.fileData.file =  null;
       this.status = Status.wait;
       this.$message.success("删除成功");
     },
@@ -232,11 +232,10 @@ export default {
       this.uploadedList = uploadedList
       // 创建上传切片数据
       this.uploadChunkData = chunkList
-        .filter(({ hash }) => !this.uploadedList.includes(hash))
         .map(({ file }, index) => ({
           fileHash: this.fileData.fileHash,
           chunk: file, // 切片文件
-          hash:  `${this.fileData.fileHash}-${index}`,
+          chunkHash:  `${this.fileData.fileHash}-${index}`,
           percentage: this.uploadedList.includes(index) ? 100 : 0,
           size: file.size,
           index,
@@ -268,7 +267,9 @@ export default {
           fileHash: this.fileData.fileHash,
           fileName: this.getFileNameAndExt().fileName,
         }),
-      });
+      }).then(()=>{
+        this.$message.success('上传成功')
+      })
     },
     requestWithLimit(prmiseQueue, callback = null) {
       // 请求数量记录，默认为 0
@@ -279,7 +280,6 @@ export default {
         count++;
         const p = prmiseQueue.shift();
         p.then((res) => {
-          console.log(res, 'pres')
 
           // 接口调用完成，记录数减 1
           count--;
@@ -301,11 +301,11 @@ export default {
     },
     createChunksRequest() {
       return this.uploadChunkData
-        .filter(({ hash }) => !this.uploadedList.includes(hash))
-        .map(({ chunk, hash, index }) => {
+        .filter(({ chunkHash }) => !this.uploadedList.includes(chunkHash))
+        .map(({ chunk, chunkHash, index }) => {
           const formData = new FormData();
           formData.append("chunk", chunk);
-          formData.append("hash", hash);
+          formData.append("chunkHash", chunkHash);
           formData.append("fileName", this.getFileNameAndExt().fileName);
           formData.append("fileHash", this.fileData.fileHash);
 

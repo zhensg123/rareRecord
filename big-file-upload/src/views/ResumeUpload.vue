@@ -5,19 +5,11 @@
       ref="fileUploadInput"
       @change="uploadFileChange"
     />
-    <el-button @click="uploadChunks" :disabled="uploadDisabled"
+    <el-button @click="uploadChunks"
       >分片上传</el-button
     >
-    <el-button @click="resumeUpload" v-if="status === Status.pause"
-      >恢复上传</el-button
-    >
-    <el-button
-        v-else
-        :disabled="status !== Status.uploading || !fileData.fileHash"
-        @click="pauseUpload"
-        >暂停上传</el-button
-      >
     <el-button @click="handleDelete">删除所有上传文件</el-button>
+
     <el-form label-width="100px" label-position="top">
       <el-form-item label="计算切片hash：">
         <el-progress :percentage="hashPercentage"></el-progress>
@@ -29,7 +21,7 @@
       </el-form-item>
     </el-form>
     <el-table :data="uploadChunkData" style="width: 100%">
-      <el-table-column prop="hash" label="chunk hash" width="400">
+      <el-table-column prop="chunkHash" label="chunk hash" width="400">
       </el-table-column>
       <el-table-column prop="size" label="size(Mb)" width="180">
         <template slot-scope="{ row }">
@@ -47,30 +39,21 @@
 
 <script>
 import axios from "axios";
-const CancelToken = axios.CancelToken;
 
 const SIZE = 10 * 1024 * 1024;
 const LIMIT = 6;
-const Status = {
-  wait: "wait",
-  pause: "pause",
-  uploading: "uploading",
-};
+
 export default {
   name: "BigFIleUpload",
   components: {},
   data() {
-    this.chunkRequestList = []
-    this.uploadedList = []
     return {
-      Status,
       uploadChunkData: [],
       fileData: {
         file: null,
         fileHash: "",
         worker: null,
       },
-      status: Status.wait,
       fakeUploadPercentage: 0,
       hashPercentage: 0
     };
@@ -87,13 +70,7 @@ export default {
         .map((item) => item.size * item.percentage)
         .reduce((acc, cur) => acc + cur);
       return parseInt((loaded / this.fileData.file.size).toFixed(2));
-    },
-    uploadDisabled() {
-      return (
-        !this.fileData.file ||
-        [Status.pause, Status.uploading].includes(this.status)
-      );
-    },
+    }
   },
   watch: {
     uploadPercentage(now) {
@@ -116,10 +93,6 @@ export default {
         });
       }
     },
-    pauseUpload() {
-      this.status = Status.pause;
-      this.resetUploadData();
-    },
     // 生成文件 hash（web-worker）
     calculateHash(fileChunkList) {
       return new Promise((resolve) => {
@@ -140,47 +113,7 @@ export default {
         url: "http://localhost:3000/file/delete",
       });
       this.$refs.fileUploadInput.value = this.fileData.file =  "";
-      this.status = Status.wait;
       this.$message.success("删除成功");
-    },
-    resetUploadData() {
-      this.chunkRequestList.forEach((cancel) => cancel());
-      this.chunkRequestList = [];
-      if (this.fileData.worker) {
-        this.fileData.worker.onmessage = null;
-      }
-    },
-    async resumeUpload() {
-      if (!this.fileData.file || !this.uploadChunkData.length) return 0;
-
-      const { uploadedList, shouldUpload } = await this.verifyUpload(
-        this.fileData.file.name,
-        this.fileData.fileHash
-      );
-      if(!shouldUpload){
-        this.$message.success(
-          "skip upload：file upload success, check /target directory"
-        );
-        this.status = Status.wait;
-        return;
-      }
-      this.uploadedList = uploadedList
-      this.startShouldFileUpload();
-    },
-
-    async verifyUpload(fileName, fileHash) {
-      const { data } = await axios({
-        method: "post",
-        url: "http://localhost:3000/file/verify",
-        headers: {
-          "content-type": "application/json",
-        },
-        data: JSON.stringify({
-          fileName,
-          fileHash,
-        }),
-      });
-      return data
     },
     // 获取文件名和扩展名
     getFileNameAndExt() {
@@ -205,50 +138,29 @@ export default {
       }
       return chunkList;
     },
-    // 上传文件：创建切片、验证是否需要上传
     async uploadChunks() {
-      this.status = Status.uploading;
-
+      if(!this.fileData.file) return
       // 创建切片
       const chunkList = this.createChunk(this.fileData.file);
       this.fileData.fileHash = await this.calculateHash(chunkList);
 
-      const { shouldUpload, uploadedList } = await this.verifyUpload(
-        this.fileData.file.name,
-        this.fileData.fileHash
-      );
-
-      if (!shouldUpload) {
-        this.$message.success(
-          "skip upload：file upload success, check /target directory"
-        );
-        this.status = Status.wait;
-        return;
-      }
-      this.uploadedList = uploadedList
       // 创建上传切片数据
       this.uploadChunkData = chunkList
-        .filter(({ hash }) => !this.uploadedList.includes(hash))
         .map(({ file }, index) => ({
           fileHash: this.fileData.fileHash,
           chunk: file, // 切片文件
-          hash:  `${this.fileData.fileHash}-${index}`,
-          percentage: this.uploadedList.includes(index) ? 100 : 0,
+          chunkHash:  `${this.fileData.fileHash}-${index}`, // 切片hash
+          percentage: 0,
           size: file.size,
           index,
         }));
 
       this.startShouldFileUpload();
     },
-    // 发起请求：创建切片请求、发起请求、并发控制、发起合并切片
    startShouldFileUpload() {
       // 创建切片请求
       const chunksRequests = this.createChunksRequest();
 
-      // 切片为0直接合并
-      if(chunksRequests.length === 0){
-        return this.mergeRequest()
-      }
       // 并发以及并发控制
       this.requestWithLimit(chunksRequests, () => this.mergeRequest());
     },
@@ -297,11 +209,10 @@ export default {
     },
     createChunksRequest() {
       return this.uploadChunkData
-        .filter(({ hash }) => !this.uploadedList.includes(hash))
-        .map(({ chunk, hash, index }) => {
+        .map(({ chunk, chunkHash, index }) => {
           const formData = new FormData();
           formData.append("chunk", chunk);
-          formData.append("hash", hash);
+          formData.append("chunkHash", chunkHash);
           formData.append("fileName", this.getFileNameAndExt().fileName);
           formData.append("fileHash", this.fileData.fileHash);
 
@@ -318,16 +229,9 @@ export default {
                   (progressEvent.loaded / progressEvent.total) * 100
                 );
                 this.uploadChunkData[index].percentage = complete;
-              },
-              // 用于取消请求
-              cancelToken: new CancelToken((cancel)=> {
-                this.chunkRequestList.push(cancel);
-              }),
+              }
             })
               .then((res) => {
-                if (this.chunkRequestList) {
-                  this.chunkRequestList.splice(index, 1);
-                }
                 resolve(res);
               })
               .catch((err) => {
