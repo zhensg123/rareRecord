@@ -280,10 +280,6 @@ export default {
         count++;
         const p = prmiseQueue.shift();
         p().then((res) => {
-<<<<<<< HEAD
-=======
-          console.log(res, 'pres')
->>>>>>> 8b56c82e2347ecc2041bb429f2402a1604fa270b
 
           // 接口调用完成，记录数减 1
           count--;

@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import BigFIleUpload from '../views/BigFIleUpload.vue'
-import ResumeUpload from '../views/ResumeUpload.vue'
+import BigFIleUpload from '../views/BigFileDownload.vue'
 
 Vue.use(VueRouter)
 
@@ -10,11 +9,6 @@ const routes = [
     path: '/',
     name: 'home',
     component: BigFIleUpload
-  },
-  {
-    path: '/resume-upload',
-    name: 'ResumeUpload',
-    component: ResumeUpload
   }
 ]
 
