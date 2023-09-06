@@ -148,7 +148,7 @@ export default {
     },
     resetUploadData() {
       // 取消请求
-      this.chunkRequestList.forEach((cancel) => cancel());
+      this.chunkRequestList.forEach(({cancel}) => cancel());
       this.chunkRequestList = [];
       if (this.fileData.worker) {
         this.fileData.worker.onmessage = null;
@@ -327,13 +327,17 @@ export default {
               },
               // 用于取消请求
               cancelToken: new CancelToken((cancel)=> {
-                this.chunkRequestList.push(cancel);
+                this.chunkRequestList.push({
+                  cancelIndex: index,
+                  cancel
+                });
               }),
             })
               .then((res) => {
                 // 去除请求
                 if (this.chunkRequestList) {
-                  this.chunkRequestList.splice(index, 1);
+                  const curIndex = this.chunkRequestList.findIndex(({cancelIndex})=> cancelIndex === index);
+                  this.chunkRequestList.splice(curIndex, 1);
                 }
                 resolve(res);
               })
