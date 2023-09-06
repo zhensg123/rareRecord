@@ -115,7 +115,7 @@ export default {
         fileChunkNum,
         fileChunkSize
       );
-      console.log(requestList, 'requestList')
+      console.log(requestList, "requestList");
       this.requestWithLimit(requestList, () => {
         const sortedBuffers = this.fileChunkResults
           .sort((a, b) => a.index - b.index)
@@ -166,7 +166,7 @@ export default {
           index: i,
           buffer: null,
           percentage: 0,
-          fileLoaded: 0
+          fileLoaded: 0,
         };
       });
       const resumeFlag = this.downloadedFileList.length > 0;
@@ -201,22 +201,26 @@ export default {
       );
 
       return this.fileChunkResults
-        .filter((item) =>{
-          if(item.percentage !== 100) {
-            return true
+        .filter((item) => {
+          if (item.percentage !== 100) {
+            return true;
           }
-          return false
+          return false;
         })
-        .map((item)=>{
-          const filterFile = filerFileDownload.find(({index})=> index === item.index)
-          const end = item.range.split('-')[1]
-          const start = item.range.split('-')[0].split('=')[1]
-          console.log(start, filterFile ? filterFile.loaded : '1', end, 'end')
-          return filterFile  ? {
-             ...item,
-             range: `bytes=${parseInt(start) + filterFile.loaded}-${end}`,
-             fileLoaded: filterFile.loaded
-          } : item
+        .map((item) => {
+          const filterFile = filerFileDownload.find(
+            ({ index }) => index === item.index
+          );
+          const end = item.range.split("-")[1];
+          const start = item.range.split("-")[0].split("=")[1];
+          console.log(start, filterFile ? filterFile.loaded : "1", end, "end");
+          return filterFile
+            ? {
+                ...item,
+                range: `bytes=${parseInt(start) + filterFile.loaded}-${end}`,
+                fileLoaded: filterFile.loaded,
+              }
+            : item;
         })
         .map(({ range, size, index, fileLoaded }) =>
           this.getFileBinaryContent(range, size, index, fileLoaded)
@@ -231,11 +235,27 @@ export default {
       a.click();
       URL.revokeObjectURL(blob);
     },
+    contactBuffer(downloaded, remaining) {
+      // 假设 downloaded 是已下载的部分，remaining 是未下载的部分
+
+      // 创建一个新的 ArrayBuffer，其大小等于已下载部分和未下载部分的总大小
+      let totalSize = downloaded.byteLength + remaining.byteLength;
+      let combined = new ArrayBuffer(totalSize);
+
+      // 创建一个 Uint8Array 视图，以便我们可以复制数据
+      let view = new Uint8Array(combined);
+
+      // 复制已下载的部分
+      view.set(new Uint8Array(downloaded));
+
+      // 复制未下载的部分
+      view.set(new Uint8Array(remaining), downloaded.byteLength);
+      return combined
+    },
     getFileBinaryContent(range, size, index, fileLoaded = 0) {
       return () => {
         return new Promise((resolve, reject) => {
           // const loadedPercentage = this.fileChunkResults[index].percentage
-console.log(fileLoaded, 'fileLoadedfileLoaded')
           axios({
             method: "get",
             url: "http://localhost:3000/file/down",
@@ -266,6 +286,7 @@ console.log(fileLoaded, 'fileLoadedfileLoaded')
             responseType: "arraybuffer",
           })
             .then((res) => {
+              console.log(res, "res");
               this.fileChunkResults[index].buffer = res.data;
               // 去除请求
               if (this.chunkRequestList) {
