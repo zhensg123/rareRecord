@@ -61,9 +61,8 @@ const mergeFileChunk = async (filePath, fileHash, size) => {
   // 读取所有chunk路径
   const chunkPaths = await fse.readdir(chunkDir);
   // 根据切片下标进行排序
-  // 使用下面的方式有问题
-  // chunkPaths.sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
-  chunkPaths.sort((a, b) => parseInt(a.split('-').pop()) - parseInt(b.split('-').pop()));
+  chunkPaths.sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
+  // chunkPaths.sort((a, b) => parseInt(a.split('-').pop()) - parseInt(b.split('-').pop()));
   // 并发写入文件
   await Promise.all(
     chunkPaths.map((chunkPath, index) =>
@@ -134,6 +133,7 @@ app.post('/file/upload', function (req, res, next) {
 
 
 app.post('/file/merge', async function (req, res, next) {
+
   const data = await resolvePost(req);
   const { fileHash, fileName, size } = data;
   const ext = extractExt(fileName);

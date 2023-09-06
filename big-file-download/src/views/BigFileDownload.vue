@@ -109,7 +109,14 @@ export default {
       });
     },
     async downloadFile({ fileChunkSize }) {
+<<<<<<< HEAD
       const fileChunkNum = Math.ceil(this.fileSize / fileChunkSize);
+=======
+      const { data } = await this.getFileContentLength();
+      const { fileSize } = data.data;
+      this.fileSize = fileSize
+      const fileChunkNum = Math.ceil(fileSize / fileChunkSize)
+>>>>>>> 8236ca1e30e3701b41576be1e738c6630b3cb9ba
 
       const requestList = this.generateChunkRequest(
         fileChunkNum,
@@ -228,6 +235,7 @@ export default {
       a.click();
       URL.revokeObjectURL(blob);
     },
+<<<<<<< HEAD
     getFileBinaryContent(range, size, index) {
       return () => {
         return new Promise((resolve, reject) => {
@@ -259,6 +267,27 @@ export default {
               });
             }),
             responseType: "arraybuffer",
+=======
+    getFileBinaryContent(start, end, i) {
+      return new Promise((resolve, reject) => {
+        axios({
+          method: "get",
+          url: "http://localhost:3000/file/down",
+          params: {
+            fileName: "download.zip"
+          },
+          headers: {
+            range: `bytes=${start}-${end}`,
+          },
+          responseType: "arraybuffer",
+        })
+          .then((res) => {
+            this.fileChunkResults.push({
+              buffer: res.data,
+              index: i
+            })
+            resolve(res)
+>>>>>>> 8236ca1e30e3701b41576be1e738c6630b3cb9ba
           })
             .then((res) => {
               this.fileChunkResults[index].buffer = res.data;
@@ -279,6 +308,10 @@ export default {
         });
       };
     },
+<<<<<<< HEAD
   },
+=======
+  }
+>>>>>>> 8236ca1e30e3701b41576be1e738c6630b3cb9ba
 };
 </script>
