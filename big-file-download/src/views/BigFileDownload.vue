@@ -166,6 +166,7 @@ export default {
           index: i,
           buffer: null,
           percentage: 0,
+          fileLoaded: 0
         };
       });
       const resumeFlag = this.downloadedFileList.length > 0;
@@ -209,14 +210,16 @@ export default {
         .map((item)=>{
           const filterFile = filerFileDownload.find(({index})=> index === item.index)
           const end = item.range.split('-')[1]
-          console.log(filterFile ? filterFile.loaded : '1', end, 'end')
+          const start = item.range.split('-')[0].split('=')[1]
+          console.log(start, filterFile ? filterFile.loaded : '1', end, 'end')
           return filterFile  ? {
              ...item,
-             range: `bytes=${filterFile.loaded}-${end}`
+             range: `bytes=${parseInt(start) + filterFile.loaded}-${end}`,
+             fileLoaded: filterFile.loaded
           } : item
         })
-        .map(({ range, size, index }) =>
-          this.getFileBinaryContent(range, size, index)
+        .map(({ range, size, index, fileLoaded }) =>
+          this.getFileBinaryContent(range, size, index, fileLoaded)
         );
     },
     saveAs({ name, buffers, mime = "application/octet-stream" }) {
@@ -228,9 +231,11 @@ export default {
       a.click();
       URL.revokeObjectURL(blob);
     },
-    getFileBinaryContent(range, size, index) {
+    getFileBinaryContent(range, size, index, fileLoaded = 0) {
       return () => {
         return new Promise((resolve, reject) => {
+          // const loadedPercentage = this.fileChunkResults[index].percentage
+console.log(fileLoaded, 'fileLoadedfileLoaded')
           axios({
             method: "get",
             url: "http://localhost:3000/file/down",
@@ -241,12 +246,12 @@ export default {
               range: range,
             },
             onDownloadProgress: (progressEvent) => {
-              const loaded = progressEvent.loaded;
+              const loaded = progressEvent.loaded + fileLoaded;
               let complete = parseInt((loaded / size) * 100);
 
               this.downloadedFileList.push({
                 index,
-                loaded,
+                loaded: progressEvent.loaded,
                 percentage: complete,
               });
               this.fileChunkResults[index].percentage = complete;
