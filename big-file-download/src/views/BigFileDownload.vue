@@ -76,8 +76,8 @@ export default {
     resumeDownload() {
       const requestList = this.fileChunkResults.filter(
         ({ percentage }) => percentage !== 100
-      ).map(({ range, size, index }) =>
-        this.getFileBinaryContent(range, size, index)
+      ).map(({ range,  index }) =>
+        this.getFileBinaryContent(range, index)
       );
       this.fileSize > 0 && this.downloadFile(requestList);
     },
@@ -172,8 +172,8 @@ export default {
         };
       });
 
-      return this.fileChunkResults.map(({ range, size, index }) =>
-        this.getFileBinaryContent(range, size, index)
+      return this.fileChunkResults.map(({ range, index }) =>
+        this.getFileBinaryContent(range, index)
       );
     },
     saveAs({ name, buffers, mime = "application/octet-stream" }) {
@@ -185,7 +185,7 @@ export default {
       a.click();
       URL.revokeObjectURL(blob);
     },
-    getFileBinaryContent(range, size, index) {
+    getFileBinaryContent(range,index) {
       return () => {
         return new Promise((resolve, reject) => {
           // const loadedPercentage = this.fileChunkResults[index].percentage
@@ -199,8 +199,8 @@ export default {
               range,
             },
             onDownloadProgress: (progressEvent) => {
-              const loaded = progressEvent.loaded;
-              let complete = parseInt((loaded / size) * 100);
+              const {loaded, total} = progressEvent;
+              let complete = parseInt((loaded / total) * 100);
 
               this.fileChunkResults[index].percentage = complete;
             },
