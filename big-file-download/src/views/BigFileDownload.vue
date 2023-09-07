@@ -28,12 +28,11 @@
 <script>
 import axios from "axios";
 const CancelToken = axios.CancelToken;
-
+const FileChunkSize = 2 * 1024 * 1024;
 const LIMIT = 6;
 export default {
   data() {
     this.chunkRequestList = [];
-    this.downloadedFileList = [];
     return {
       fileChunkResults: [],
       fileSize: 0,
@@ -63,23 +62,35 @@ export default {
   },
   methods: {
     pauseDownload() {
-      console.log(this.chunkRequestList, "this.chunkRequestList");
       this.chunkRequestList.forEach(({ cancel }) => cancel());
       this.chunkRequestList = [];
     },
-    handleDelete() {},
-    resumeDownload() {
-      this.downloadFile({
-        fileChunkSize: 3 * 1024 * 1024,
+    async handleDelete() {
+      await axios({
+        method: "get",
+        url: "http://localhost:3000/file/delete",
       });
+      this.fileSize = 0;
+      this.$message.success("删除成功");
+    },
+    resumeDownload() {
+      const requestList = this.fileChunkResults.filter(
+        ({ percentage }) => percentage !== 100
+      ).map(({ range, size, index }) =>
+        this.getFileBinaryContent(range, size, index)
+      );
+      this.fileSize > 0 && this.downloadFile(requestList);
     },
     async startDownloadBigFile() {
-      this.downloadedFileList = [];
       this.fileChunkResults = [];
-      await this.getFileContentLength();
-      this.downloadFile({
-        fileChunkSize: 1 * 1024 * 1024,
-      });
+      const { data, message } = await this.getFileContentLength();
+      if (!data) {
+        return this.$message.warning(message);
+      }
+      this.fileSize = data.fileSize;
+      const fileChunkNum = Math.ceil(this.fileSize / FileChunkSize);
+      const requestList = this.generateChunkRequest(fileChunkNum);
+      this.downloadFile(requestList);
     },
     getFileContentLength() {
       return new Promise((resolve, reject) => {
@@ -91,9 +102,7 @@ export default {
           },
         })
           .then((res) => {
-            const { data } = res.data;
-            this.fileSize = data.fileSize;
-            resolve(res);
+            resolve(res.data);
           })
           .catch((err) => {
             reject(err);
@@ -108,14 +117,7 @@ export default {
         return tmp;
       });
     },
-    async downloadFile({ fileChunkSize }) {
-      const fileChunkNum = Math.ceil(this.fileSize / fileChunkSize);
-
-      const requestList = this.generateChunkRequest(
-        fileChunkNum,
-        fileChunkSize
-      );
-      console.log(requestList, "requestList");
+    async downloadFile(requestList) {
       this.requestWithLimit(requestList, () => {
         const sortedBuffers = this.fileChunkResults
           .sort((a, b) => a.index - b.index)
@@ -132,19 +134,20 @@ export default {
         // 接口每调用一次，记录数加 1
         count++;
         const p = prmiseQueue.shift();
-        console.log(p, "pp");
-        p().then((res) => {
-          // 接口调用完成，记录数减 1
-          count--;
-          if (!prmiseQueue.length && !count) {
-            // 这里可以对所有接口返回的数据做处理，以便输出
-            callback && callback();
-          }
-          // prmiseQueue 长度不为 0 且记录小于限制的数量时递归调用
-          if (prmiseQueue.length && count < LIMIT) {
-            run();
-          }
-        });
+        p()
+          .then((res) => {
+            // 接口调用完成，记录数减 1
+            count--;
+            if (!prmiseQueue.length && !count) {
+              // 这里可以对所有接口返回的数据做处理，以便输出
+              callback && callback();
+            }
+            // prmiseQueue 长度不为 0 且记录小于限制的数量时递归调用
+            if (prmiseQueue.length && count < LIMIT) {
+              run();
+            }
+          })
+          .catch((err) => {});
       };
 
       // 根据 limit 并发调用
@@ -152,13 +155,13 @@ export default {
         run();
       }
     },
-    generateChunkRequest(fileChunkNum, fileChunkSize) {
-      const initFileChunk = [...new Array(fileChunkNum).keys()].map((i) => {
-        let start = i * fileChunkSize;
+    generateChunkRequest(fileChunkNum) {
+      this.fileChunkResults = [...new Array(fileChunkNum).keys()].map((i) => {
+        let start = i * FileChunkSize;
         let end =
           i + 1 === fileChunkNum
             ? this.fileSize - 1
-            : (i + 1) * fileChunkSize - 1;
+            : (i + 1) * FileChunkSize - 1;
 
         return {
           range: `bytes=${start}-${end}`,
@@ -166,65 +169,12 @@ export default {
           index: i,
           buffer: null,
           percentage: 0,
-          fileLoaded: 0,
         };
       });
-      const resumeFlag = this.downloadedFileList.length > 0;
 
-      const filerFileDownload = resumeFlag
-        ? Object.values(
-            this.downloadedFileList.reduce((acc, cur) => {
-              if (
-                !acc[cur.index] ||
-                cur.percentage > acc[cur.index].percentage
-              ) {
-                acc[cur.index] = cur;
-              }
-              return acc;
-            }, {})
-          )
-        : [];
-
-      console.log(
-        this.fileChunkResults,
-        this.downloadedFileList,
-        resumeFlag,
-        "this.fileChunkResults"
+      return this.fileChunkResults.map(({ range, size, index }) =>
+        this.getFileBinaryContent(range, size, index)
       );
-      this.fileChunkResults = resumeFlag
-        ? this.fileChunkResults
-        : initFileChunk;
-      console.log(
-        this.fileChunkResults,
-        filerFileDownload,
-        "222this.fileChunkResults"
-      );
-
-      return this.fileChunkResults
-        .filter((item) => {
-          if (item.percentage !== 100) {
-            return true;
-          }
-          return false;
-        })
-        .map((item) => {
-          const filterFile = filerFileDownload.find(
-            ({ index }) => index === item.index
-          );
-          const end = item.range.split("-")[1];
-          const start = item.range.split("-")[0].split("=")[1];
-          console.log(start, filterFile ? filterFile.loaded : "1", end, "end");
-          return filterFile
-            ? {
-                ...item,
-                range: `bytes=${parseInt(start) + filterFile.loaded}-${end}`,
-                fileLoaded: filterFile.loaded,
-              }
-            : item;
-        })
-        .map(({ range, size, index, fileLoaded }) =>
-          this.getFileBinaryContent(range, size, index, fileLoaded)
-        );
     },
     saveAs({ name, buffers, mime = "application/octet-stream" }) {
       const blob = new Blob([buffers], { type: mime });
@@ -235,24 +185,7 @@ export default {
       a.click();
       URL.revokeObjectURL(blob);
     },
-    contactBuffer(downloaded, remaining) {
-      // 假设 downloaded 是已下载的部分，remaining 是未下载的部分
-
-      // 创建一个新的 ArrayBuffer，其大小等于已下载部分和未下载部分的总大小
-      let totalSize = downloaded.byteLength + remaining.byteLength;
-      let combined = new ArrayBuffer(totalSize);
-
-      // 创建一个 Uint8Array 视图，以便我们可以复制数据
-      let view = new Uint8Array(combined);
-
-      // 复制已下载的部分
-      view.set(new Uint8Array(downloaded));
-
-      // 复制未下载的部分
-      view.set(new Uint8Array(remaining), downloaded.byteLength);
-      return combined
-    },
-    getFileBinaryContent(range, size, index, fileLoaded = 0) {
+    getFileBinaryContent(range, size, index) {
       return () => {
         return new Promise((resolve, reject) => {
           // const loadedPercentage = this.fileChunkResults[index].percentage
@@ -263,17 +196,12 @@ export default {
               fileName: "download.zip",
             },
             headers: {
-              range: range,
+              range,
             },
             onDownloadProgress: (progressEvent) => {
-              const loaded = progressEvent.loaded + fileLoaded;
+              const loaded = progressEvent.loaded;
               let complete = parseInt((loaded / size) * 100);
 
-              this.downloadedFileList.push({
-                index,
-                loaded: progressEvent.loaded,
-                percentage: complete,
-              });
               this.fileChunkResults[index].percentage = complete;
             },
             // 用于取消请求
@@ -286,7 +214,6 @@ export default {
             responseType: "arraybuffer",
           })
             .then((res) => {
-              console.log(res, "res");
               this.fileChunkResults[index].buffer = res.data;
               // 去除请求
               if (this.chunkRequestList) {
@@ -295,8 +222,6 @@ export default {
                 );
                 this.chunkRequestList.splice(curIndex, 1);
               }
-              // 本地缓存已经下载的切片
-              // localStorage.setItem('downloadedFileList', JSON.stringify(this.downloadedFileList))
               resolve(res);
             })
             .catch((err) => {
