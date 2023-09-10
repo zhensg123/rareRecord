@@ -8,12 +8,16 @@
 </head>
 <body>
   <div id="app">
+    <button @click="clickMe">{{name}}</button>
+    <button @click="clickMe">{{name | addSSvue}}</button>
+
+    <button>{{computedName}}</button>
+    <span>{{store.state.count}}</span>
+    <my-component></my-component>
+  </div>
+<script src="./src/index.js"></script>
     <!-- <h2>{{title}}</h2>
     <input v-model="name">
     <h1>{{name}}</h1> -->
-    <button v-on:click="clickMe">{{name}}</button>
-</div>
-<script src="./src/index.js"></script>
-
 </body>
 </html>
