@@ -1,129 +1,101 @@
-import {
-    Watcher
-} from './watcher'
 
-export default class Compile {
-    constructor(el, vm) {
-        this.vm = vm;
-        this.el = document.querySelector(el);
-        this.fragment = null;
-        this.init();
+import Watcher from "./watcher";
+class Compile {
+    constructor(vm) {
+      this.vm = vm
+      // 兼容处理组件
+      this.vm.el = this.handleTemplate(vm)
+      this.compile();
+      this.vm._callHook('created');
+  
     }
-
-    init() {
-        if (this.el) {
-            console.log(this.el, '3322')
-            this.fragment = this.nodeToFragment(this.el);
-            console.log(this.fragment, 'fragment', this.el)
-            // 编译这段片段
-            this.compileElement(this.fragment);
-            this.el.appendChild(this.fragment);
-            console.log(this.fragment, 'fragm22222222ent', this.el)
-
-
-        } else {
-            console.log('Dom元素不存在');
-        }
+    handleTemplate(vm){
+      if(vm.el && typeof vm.el === 'string') {
+        return document.querySelector(vm.el)
+      }
+      const div = document.createElement('div')
+      div.innerHTML = vm.template
+      return div.firstChild
     }
+    compile() {
+      this.replaceData(this.vm.el);
+  
+      const documentFragment = this.nodeToFragment(this.vm.el)
+  
+      this.vm.el.appendChild(documentFragment);
+    }
+  
     nodeToFragment(el) {
-        let fragment = document.createDocumentFragment();
-        let child = el.firstChild;
-        while (child) {
-            console.log(child, '(thischild.el')
-            // 将Dom元素移入fragment中
-            fragment.appendChild(child);
-            child = el.firstChild
-        }
-        console.log(this.el, '(this.el')
-
-        return fragment;
+      let fragment = document.createDocumentFragment();
+      let child;
+      while (child = el.firstChild) {
+        // 将Dom元素移入fragment中
+        fragment.appendChild(child);
+      }
+      return fragment;
     }
-    compileElement(el) {
-        let childNodes = el.childNodes;
-        [].slice.call(childNodes).forEach((node)=> {
-            let reg = /\{\{(.*)\}\}/;
-            let text = node.textContent;
-            // 元素节点
-            if (this.isElementNode(node)) {
-                this.compile(node);
-                // 文本节点
-            } else if (this.isTextNode(node) && reg.test(text)) {
-                this.compileText(node, reg.exec(text)[1]);
-            }
-
-            if (node.childNodes && node.childNodes.length) {
-                this.compileElement(node);
-            }
-        });
-    }
-    compile(node) {
-        let nodeAttrs = node.attributes;
-        Array.prototype.forEach.call(nodeAttrs,  (attr)=>{
-            let attrName = attr.name;
-            if (this.isDirective(attrName)) {
-                let exp = attr.value;
-                let dir = attrName.substring(2);
-                if (this.isEventDirective(dir)) { // 事件指令
-                    this.compileEvent(node, this.vm, exp, dir);
-                } else { // v-model 指令
-                    this.compileModel(node, this.vm, exp, dir);
+  
+    replaceData(frag) {
+      Array.from(frag.childNodes).forEach(node => {
+        let txt = node.textContent;
+        let reg = /\{\{(.*?)\}\}/g;
+  
+        if (this.isTextNode(node) && reg.test(txt)) {
+          let replaceTxt = () => {
+            node.textContent = txt.replace(reg, (matched, placeholder) => {
+              let key = placeholder.split('|')[0].trim();
+              let filter = placeholder.split('|')[1];
+              if (filter) {
+                let filterFunc = this.vm.filters[filter.trim()];
+                if (filterFunc) {
+                  new Watcher(this.vm, key, replaceTxt);
+                  return filterFunc.call(this.vm, key.split('.').reduce((val, k) => {
+                    return val[k];
+                  }, this.vm));
                 }
-                node.removeAttribute(attrName);
-            }
-        });
-    }
-    compileText(node, exp) {
-        let initText = this.vm.data[exp];
-        
-        this.updateText(node, initText);
-        // new Watcher(this.vm, exp,  (value)=> {
-        //     this.updateText(node, value);
-        // });
-    }
-    compileEvent(node, vm, exp, dir) {
-        let eventType = dir.split(':')[1];
-        let cb = vm.methods && vm.methods[exp];
-
-        if (eventType && cb) {
-            node.addEventListener(eventType, cb.bind(vm), false);
+              } else {
+                new Watcher(this.vm, placeholder, replaceTxt);
+                return placeholder.split('.').reduce((val, key) => {
+                  return val[key];
+                }, this.vm);
+              }
+            });
+          };
+          replaceTxt();
         }
-    }
-    compileModel(node, vm, exp, dir) {
-        let val = this.vm[exp];
-        
-        console.log(val)
-        this.modelUpdater(node, val);
-        // new Watcher(this.vm, exp,  (value)=> {
-        //     this.modelUpdater(node, value);
-        // });
-
-        node.addEventListener('input',  (e)=> {
-            let newValue = e.target.value;
-            if (val === newValue) {
-                return;
+  
+        if (this.isElementNode(node)) {
+          Array.from(node.attributes).forEach(attr => {
+            if (attr.name.startsWith('@')) {
+              const eventName = attr.name.slice(1);
+              const methodName = attr.value;
+              if (methodName in this.vm.methods) {
+                node.addEventListener(eventName, this.vm.methods[methodName].bind(this.vm));
+              }
             }
-            this.vm[exp] = newValue;
-            val = newValue;
-        });
+          });
+          let nodeName = node.nodeName.toLowerCase();
+          if (this.vm.components && this.vm.components[nodeName]) {
+            let ComponentConstructor = this.vm.components[nodeName];
+            let component = new ComponentConstructor();
+            console.log(node, node.parentNode, 'DE')
+            node.parentNode.replaceChild(component.el, node);
+          }
+          if (node.childNodes && node.childNodes.length) {
+            this.replaceData(node);        
+          }
+        }
+      });
     }
-    updateText(node, value) {
-        node.textContent = typeof value == 'undefined' ? '' : value;
-    }
-    modelUpdater(node, value, oldValue) {
-        node.value = typeof value == 'undefined' ? '' : value;
-    }
-    // 是否是指令
-    isDirective(attr) {
-        return attr.indexOf('v-') == 0;
-    }
-    // 是否事件指令
-    isEventDirective(dir) {
-        return dir.indexOf('on:') === 0;
-    }
+    // 元素节点
     isElementNode(node) {
-        return node.nodeType == 1;
+      return node.nodeType == 1
     }
+    // 文本节点
     isTextNode(node) {
-        return node.nodeType == 3;
+      return node.nodeType == 3
     }
-}
+  }
+
+
+  export default Compile
