@@ -4,7 +4,11 @@ module.exports = {
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'SSvue.js',
+    filename: 'my-microff.js',
+    library: 'Microff',
+    libraryTarget: 'umd',
+    globalObject: 'this',
+    umdNamedDefine: true
   },
   plugins: [new htmlWebpackPlugin({
     template: './index.html',
