@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>简版vue</title>
+</head>
+<body>
+  <div id="app">
+    <button @click="clickMe">{{name}}</button>
+    <button @click="clickMe">{{name | addSSvue}}</button>
+
+    <button>{{computedName}}</button>
+    <span>{{store.state.count}}</span>
+    <my-component></my-component>
+  </div>
+<script src="./src/index.js"></script>
+    <!-- <h2>{{title}}</h2>
+    <input v-model="name">
+    <h1>{{name}}</h1> -->
+
+    <script>
+      const fns = [1, 2, 3, 4]
+      for( let j = 0, fn; fn = fns[ j++ ]; ){
+        console.log(fn)
+      } 
+    </script>
+</body>
+</html>
