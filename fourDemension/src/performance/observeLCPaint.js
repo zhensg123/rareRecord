@@ -1,10 +1,13 @@
-import { isSupportPerformanceObserver } from './utils'
-import { getPageURL } from '../utils/utils'
+import { getPageURL } from '../utils/util'
 import { lazyReportCache } from '../utils/report'
 
 let lcpDone = false
 export function isLCPDone() {
     return lcpDone
+}
+
+function isSupportPerformanceObserver() {
+    return !!window.PerformanceObserver
 }
 
 export default function observeLCP() {

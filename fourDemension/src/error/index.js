@@ -1,6 +1,5 @@
 import { lazyReportCache } from '../utils/report'
 import { getPageURL } from '../utils/util'
-import config from '../config'
 
 export default function error() {
     const oldConsoleError = window.console.error 
@@ -60,22 +59,4 @@ export default function error() {
         })
     })
 
-    if (config.vue?.Vue) {
-        config.vue.Vue.config.errorHandler = (err, vm, info) => {
-            console.error(err)
-
-            lazyReportCache({
-                info,
-                error: err.stack,
-                subType: 'vue',
-                type: 'error',
-                startTime: performance.now(),
-                pageURL: getPageURL(),
-            })
-        }
-    }
-
-    // onBFCacheRestore(() => {
-    //     error()
-    // })
 }

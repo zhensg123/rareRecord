@@ -1,6 +1,9 @@
-import { isSupportPerformanceObserver } from './utils'
-import { executeAfterLoad } from '../utils/utils'
+import { executeAfterLoad } from '../utils/util'
 import { lazyReportCache } from '../utils/report'
+
+function isSupportPerformanceObserver() {
+    return !!window.PerformanceObserver
+}
 
 export default function observeEntries() {
     executeAfterLoad(() => {
