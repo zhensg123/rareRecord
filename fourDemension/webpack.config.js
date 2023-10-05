@@ -4,7 +4,7 @@ module.exports = {
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'SSvue.js',
+    filename: 'fd.js',
   },
   plugins: [new htmlWebpackPlugin({
     template: './index.html',
