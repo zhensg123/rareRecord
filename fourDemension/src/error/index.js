@@ -1,5 +1,5 @@
 import { lazyReportCache } from '../utils/report'
-import { onBFCacheRestore, getPageURL } from '../utils/utils'
+import { getPageURL } from '../utils/util'
 import config from '../config'
 
 export default function error() {
@@ -75,7 +75,7 @@ export default function error() {
         }
     }
 
-    onBFCacheRestore(() => {
-        error()
-    })
+    // onBFCacheRestore(() => {
+    //     error()
+    // })
 }

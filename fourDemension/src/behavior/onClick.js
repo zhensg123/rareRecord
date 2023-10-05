@@ -1,6 +1,6 @@
 import { lazyReportCache } from '../utils/report'
-import { getPageURL } from '../utils/utils'
-import { getUUID } from './utils'
+import { getPageURL } from '../utils/util'
+import { getUUID } from './util'
 
 export default function onClick() {
     ['mousedown', 'touchstart'].forEach(eventType => {

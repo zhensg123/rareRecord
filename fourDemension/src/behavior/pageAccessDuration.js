@@ -1,5 +1,5 @@
 import { report } from '../utils/report'
-import { onBeforeunload, getPageURL } from '../utils/utils'
+import { onBeforeunload, getPageURL } from '../utils/util'
 import { getUUID } from './util'
 
 export default function pageAccessDuration() {

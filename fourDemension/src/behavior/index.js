@@ -1,19 +1,16 @@
 import pv from './pv'
 import pageAccessDuration from './pageAccessDuration'
-import pageAccessHeight from './pageAccessHeight'
 import onClick from './onClick'
-import config from '../config'
-import onVueRouter from './onVueRouter'
-import pageChange from './pageChange'
+// import config from '../config'
+
 
 export default function behavior() {
     pv()
     pageAccessDuration()
-    pageAccessHeight()
+    // pageAccessHeight()
     onClick()
-    pageChange()
 
-    if (config.vue?.router) {
-        onVueRouter(config.vue.router)
-    }
+    // if (config.vue?.router) {
+    //     onVueRouter(config.vue.router)
+    // }
 }

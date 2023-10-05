@@ -1,6 +1,6 @@
 import { lazyReportCache } from '../utils/report'
 import { getUUID } from './util'
-import { getPageURL } from '../utils/utils'
+import { getPageURL } from '../utils/util'
 
 export default function pv() {
     lazyReportCache({
