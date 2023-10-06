@@ -1,11 +1,8 @@
 // import { originalOpen, originalSend } from './xhr'
 import { addCache, getCache, clearCache } from './cache'
 import config from '../config'
+import generateUniqueID from './generateUniqueID'
 
-
-function generateUniqueID() {
-    return `v2-${Date.now()}-${Math.floor(Math.random() * (9e12 - 1)) + 1e12}`
-}
 export function isSupportSendBeacon() {
     return !!window.navigator?.sendBeacon
 }

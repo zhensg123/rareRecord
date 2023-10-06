@@ -1,6 +1,6 @@
 import { report } from '../utils/report'
 import { onBeforeunload, getPageURL } from '../utils/util'
-import { getUUID } from './util'
+import getUUID from './getUUID'
 
 export default function pageAccessDuration() {
     onBeforeunload(() => {
