@@ -1,10 +1,6 @@
 import { getPageURL } from '../utils/util'
 import { lazyReportCache } from '../utils/report'
 
-let lcpDone = false
-export function isLCPDone() {
-    return lcpDone
-}
 
 function isSupportPerformanceObserver() {
     return !!window.PerformanceObserver
@@ -12,12 +8,10 @@ function isSupportPerformanceObserver() {
 
 export default function observeLCP() {
     if (!isSupportPerformanceObserver()) {
-        lcpDone = true
         return
     }
     
     const entryHandler = (list) => {
-        lcpDone = true
 
         if (observer) {
             observer.disconnect()
