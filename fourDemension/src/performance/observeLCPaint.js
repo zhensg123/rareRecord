@@ -1,22 +1,16 @@
-import { getPageURL } from '../utils/util'
+import { getPageURL, isSupportPerformanceObserver } from '../utils/util'
 import { lazyReportCache } from '../utils/report'
 
 
-function isSupportPerformanceObserver() {
-    return !!window.PerformanceObserver
-}
 
 export default function observeLCP() {
     if (!isSupportPerformanceObserver()) {
         return
     }
-    
+    if(observer){
+        observer.disconnect()
+    }
     const entryHandler = (list) => {
-
-        if (observer) {
-            observer.disconnect()
-        }
-        
         for (const entry of list.getEntries()) {
             const json = entry.toJSON()
             delete json.duration

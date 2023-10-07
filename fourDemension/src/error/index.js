@@ -2,17 +2,6 @@ import { lazyReportCache } from '../utils/report'
 import { getPageURL } from '../utils/util'
 
 export default function error() {
-    const oldConsoleError = window.console.error 
-    window.console.error = (...args) => { 
-        oldConsoleError.apply(this, args)
-        lazyReportCache({
-            type: 'error',
-            subType: 'console-error',
-            startTime: performance.now(),
-            errData: args,
-            pageURL: getPageURL(),
-        })
-    }
 
     // 捕获资源加载失败错误 js css img...
     window.addEventListener('error', e => {

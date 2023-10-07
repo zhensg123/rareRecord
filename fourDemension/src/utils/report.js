@@ -1,11 +1,6 @@
-// import { originalOpen, originalSend } from './xhr'
 import { addCache, getCache, clearCache } from './cache'
 import config from '../config'
-import generateUniqueID from './generateUniqueID'
-
-export function isSupportSendBeacon() {
-    return !!window.navigator?.sendBeacon
-}
+import {isSupportSendBeacon, generateUniqueID} from './util'
 
 const sendBeacon = (function(){
     if(isSupportSendBeacon()){

@@ -20,11 +20,29 @@ render()
 microFramework.registerApp('app1', {
   activeRule: '/vue',
   pageEntry: 'http://localhost:8001',
-  mountPoint: 'app1'
+  mountPoint: 'app1',
+  bootstrap(){
+    console.log('app1挂载前')
+  },
+  mount() {
+    console.log('app1已挂载')         
+  },
+  unmount() {
+    console.log('app1已卸载')         
+  },
 });
 
 microFramework.registerApp('app2', {
   activeRule: '/react',
   pageEntry: 'http://localhost:8002',
-  mountPoint: 'app2'
+  mountPoint: 'app2',
+  bootstrap(){
+    console.log('app2挂载前')
+  },
+  mount() {
+    console.log('app2已挂载')         
+  },
+  unmount() {
+    console.log('app2已卸载')         
+  },
 });

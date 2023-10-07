@@ -1,11 +1,14 @@
 import observePaint from './observePaint'
-
-import config from '../config'
-
+import observeEntries from './observeEntries'
+import observeFCPaint from './observeFCPaint'
+import observeLoad from './observeLoad'
+import observeLCPaint from './observeLCPaint'
+import xhr from './xhr'
 export default function performance() {
     observePaint()
-
-    // if (config.vue?.Vue && config.vue?.router) {
-    //     onVueRouter(config.vue.Vue, config.vue.router)
-    // }
+    observeEntries()
+    observeFCPaint()
+    observeLoad()
+    observeLCPaint()
+    xhr()
 }

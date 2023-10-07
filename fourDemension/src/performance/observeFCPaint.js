@@ -1,10 +1,8 @@
-import { getPageURL } from '../utils/util'
+import { getPageURL, isSupportPerformanceObserver } from '../utils/util'
 import { lazyReportCache } from '../utils/report'
 
-function isSupportPerformanceObserver() {
-    return !!window.PerformanceObserver
-}
-export default function observePaint() {
+
+export default function observeFCPaint() {
     if (!isSupportPerformanceObserver()) return
     
     const entryHandler = (list) => {        

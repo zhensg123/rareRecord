@@ -15,6 +15,17 @@ export function deepCopy(target) {
     return target
 }
 
+export  function generateUniqueID() {
+    return `v2-${Date.now()}-${Math.floor(Math.random() * (9e12 - 1)) + 1e12}`
+}
+
+export function isSupportPerformanceObserver() {
+    return !!window.PerformanceObserver
+}
+export function isSupportSendBeacon() {
+    return !!window.navigator?.sendBeacon
+}
+
 export function onBFCacheRestore(callback) {
     window.addEventListener('pageshow', event => {
         // pageshow 事件有一个persisted属性，返回一个布尔值。页面第一次加载时，这个属性是false；当页面从缓存加载时，这个属性是true。

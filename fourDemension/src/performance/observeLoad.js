@@ -1,6 +1,6 @@
 import { lazyReportCache } from '../utils/report'
 
-export default function observerLoad() {
+export default function observeLoad() {
     ['load', 'DOMContentLoaded'].forEach(type => onEvent(type))
 }
 

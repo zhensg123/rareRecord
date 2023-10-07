@@ -1,4 +1,4 @@
-import generateUniqueID from '../utils/generateUniqueID'
+import {generateUniqueID} from '../utils/util'
 
 let uuid = ''
 export default function getUUID() {
