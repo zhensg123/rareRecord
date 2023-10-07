@@ -19,8 +19,8 @@ export default class MicroFrontendFramework {
     return instance;
   }
 
-  registerApp(name, { activeRule, pageEntry, mountPoint }) {
-    this.apps[name] = { activeRule, pageEntry, mountPoint };
+  registerApp(name, { activeRule, pageEntry, mountPoint,bootstrap, mount, unmount }) {
+    this.apps[name] = { activeRule, pageEntry, mountPoint, bootstrap, mount,unmount };
   }
 
   switchApp() {
@@ -29,6 +29,7 @@ export default class MicroFrontendFramework {
     const appName = Object.keys(this.apps).find(name => pathname.startsWith(this.apps[name].activeRule));
     if (appName) {
       const app =  this.apps[appName]
+      console.log(app, 'app')
       // 如果找到了匹配的子应用
       if (this.currentApp !== appName) {
         // 如果它不是当前的子应用，那么切换子应用
