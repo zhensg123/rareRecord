@@ -27,7 +27,6 @@ export default class MicroFrontendFramework {
     const {pathname} = window.location;
       // 查找匹配的子应用
     const appName = Object.keys(this.apps).find(name => pathname.startsWith(this.apps[name].activeRule));
-    console.log(appName, 'appNameappNameappName')
     if (appName) {
       const app =  this.apps[appName]
       // 如果找到了匹配的子应用
@@ -39,6 +38,7 @@ export default class MicroFrontendFramework {
             this.currentApp = appName;
           });
         }
+        app.bootstrap && app.bootstrap()
         this.loadHtml(app.pageEntry);
         this.currentApp = appName;
       }
@@ -61,6 +61,7 @@ export default class MicroFrontendFramework {
       unloadLinkAndStyle(name, 'style')
       unloadScript(name, document.head)
       unloadScript(name, document.body)
+      this.apps[this.currentApp].unmount && this.apps[this.currentApp].unmount()
 
       resolve();
     })
@@ -103,6 +104,8 @@ export default class MicroFrontendFramework {
 
     appendScript(doc.head, 'head',this.currentApp)
     appendScript(doc.body, 'body',this.currentApp)
+
+    this.apps[this.currentApp].mount && this.apps[this.currentApp].mount()
   }
 }
 
