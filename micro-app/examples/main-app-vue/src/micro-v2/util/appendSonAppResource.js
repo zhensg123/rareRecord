@@ -11,6 +11,8 @@
     },
   });
 
+  // 如果是src浏览器会自定执行代码 从而不能修改script的window 需要异步获取之后再修改
+  // 将appendScript整体改为异步的  如果没有url直接resolve返回 否则使用接口调用
 export function appendScript(docTag,type, currentApp) {
     // 插入<head>中的<script>标签
     const fragmentForScript = document.createDocumentFragment();
