@@ -1,7 +1,7 @@
-import overwriteApiAndSubscribeEvent from './util/overwriteApiAndSubscribeEvent'
-import overwriteHeadAppendChild from './util/overwriteHeadAppendChild'
-import {appendScript,appendLink,appendStyle } from './util/appendSonAppResource'
-import {unloadLinkAndStyle, unloadScript} from './util/unloadSonAppResource'
+import overwriteApiAndSubscribeEvent from './utils/overwriteApiAndSubscribeEvent'
+import overwriteHeadAppendChild from './utils/overwriteHeadAppendChild'
+import {appendScript,appendLink,appendStyle } from './utils/appendSonAppResource'
+import {unloadLinkAndStyle, unloadScript} from './utils/unloadSonAppResource'
 
 export default class MicroFrontendFramework {
   constructor() {

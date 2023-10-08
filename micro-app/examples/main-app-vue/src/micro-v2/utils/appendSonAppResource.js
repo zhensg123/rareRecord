@@ -1,16 +1,8 @@
 // 创建一个虚拟的window对象
-const proxyWindow = new Proxy({}, {
-    get: (target, key) => {
-        return target[key];
-    },
-    set: (target, key, value) => {
-        if (key in window) {
-            target[key] = value;
-        }
-        return true;
-    },
-});
-export function executeScripts(scripts) {
+import ProxyWindowSandBox from './ProxyWindowSandBox'
+export function executeScripts(scripts, currentApp) {
+    const proxyWindow = new ProxyWindowSandBox(currentApp).proxyWindow
+
     try {
         scripts.forEach(code => {
             // ts 使用 with 会报错，所以需要这样包一下
@@ -60,8 +52,8 @@ export function appendScript(docTag, type, currentApp) {
 
     Promise.all(promiseArr)
         .then(data => {
-            console.log(data, 'promiseArrscript')
-            executeScripts(data)
+            console.log(data, currentApp, 'promiseArrscript')
+            executeScripts(data, currentApp)
 
         })
     // for (let i = 0, script; script = scripts[i++];) {
