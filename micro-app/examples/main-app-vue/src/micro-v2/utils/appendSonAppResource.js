@@ -15,7 +15,7 @@ export function executeScripts(scripts, currentApp) {
                 })(this);
             `
 
-            new Function(warpCode).call(proxyWindow)
+            new Function(warpCode).call(window)
         })
     } catch (error) {
         throw error
@@ -49,8 +49,8 @@ export function appendScript(docTag, type, currentApp) {
             return Promise.resolve(script.textContent)
         }
     })
-
-    Promise.all(promiseArr)
+console.log(promiseArr, 'promiseArr')
+    promiseArr.length > 0 && Promise.all(promiseArr)
         .then(data => {
             console.log(data, currentApp, 'promiseArrscript')
             executeScripts(data, currentApp)

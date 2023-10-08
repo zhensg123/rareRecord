@@ -28,7 +28,6 @@ export default class MicroFrontendFramework {
       // 查找匹配的子应用
     const appName = Object.keys(this.apps).find(name => pathname.startsWith(this.apps[name].activeRule));
     if (appName) {
-      const app =  this.apps[appName]
       console.log(app, 'app')
       // 如果找到了匹配的子应用
       if (this.currentApp !== appName) {
@@ -39,9 +38,10 @@ export default class MicroFrontendFramework {
             this.currentApp = appName;
           });
         }
+        const app =  this.apps[appName]
+
         app.bootstrap && app.bootstrap()
-        this.loadHtml(app.pageEntry);
-        this.currentApp = appName;
+  
       }
       // 如果它是当前的子应用，那么不做任何操作
     } else if (this.currentApp) {
