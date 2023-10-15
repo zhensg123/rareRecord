@@ -46,3 +46,5 @@ microFramework.registerApp('app2', {
     console.log('app2已卸载')         
   },
 });
+
+window.spaGlobalState.on('vue', () => alert('父应用监听到 vue 子应用发送了一个全局事件: vue'))

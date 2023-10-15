@@ -1,6 +1,6 @@
 import { originalWindow } from './originalEnv'
 
-function nextTick(callback) {
+export function nextTick(callback) {
     Promise.resolve().then(callback)
 }
 

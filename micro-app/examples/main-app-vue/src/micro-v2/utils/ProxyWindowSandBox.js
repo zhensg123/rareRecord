@@ -1,16 +1,16 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { getEventTypes, isFunction, temporarySetCurrentAppName } from './util'
+import { getEventTypes, isFunction } from './util'
 import {
     originalWindowAddEventListener,
     originalWindowRemoveEventListener,
     originalDocument,
     originalEval,
     originalWindow,
-    originalDocumentAddEventListener,
     originalDefineProperty,
 } from './originalEnv'
-
+import { patchDocument } from './patchDocument'
+import { patchDocumentEvents  } from './patchDocumentEvents'
 /**
  * js 沙箱，用于隔离子应用 window 作用域
  */
@@ -24,7 +24,6 @@ export default class ProxyWindowSandBox {
         // 子应用 window 对象
         this.microAppWindow = {}
 
-
         // 子应用向 window 注入的 key
         this.injectKeySet = new Set()
         // 子应用 setTimeout 集合，退出子应用时清除
@@ -37,13 +36,11 @@ export default class ProxyWindowSandBox {
         // 子应用 window onxxx 事件集合，退出子应用时清除
         this.onWindowEventMap = new Map()
         // 代理了 window、document 的 addEventListener 和 window.onxxx 事件
-        // this.windowSnapshot.set('attrs', new Map())
-        // this.windowSnapshot.set('windowEvents', new Map())
-        // this.windowSnapshot.set('onWindowEvents', new Map())
-        // this.windowSnapshot.set('documentEvents', new Map())
 
         this.appName = currentApp
         this.hijackProperties()
+        patchDocument(currentApp)
+        patchDocumentEvents(currentApp)
         this.proxyWindow = this.createProxyWindow(currentApp)
     }
 
@@ -51,6 +48,7 @@ export default class ProxyWindowSandBox {
      * 劫持 window 属性
      */
     hijackProperties() {
+
         const {
             microAppWindow,
             intervalSet,
@@ -116,6 +114,7 @@ export default class ProxyWindowSandBox {
         microAppWindow.document = originalDocument
         microAppWindow.originalWindow = originalWindow
         microAppWindow.window = microAppWindow
+        microAppWindow.parent = microAppWindow
 
         // 劫持 window.onxxx 事件
         getEventTypes().forEach(eventType => {
@@ -140,26 +139,26 @@ export default class ProxyWindowSandBox {
         const descriptorMap = new Map ()
         return new Proxy(this.microAppWindow, {
             get(target, key) {
-                temporarySetCurrentAppName(appName)
                 if (Reflect.has(target, key)) {
                     return Reflect.get(target, key)
                 }
-
-                const result = originalWindow[key]
+                const result =  originalWindow[key]
+                // 全局消息
+                // if(key === 'spaGlobalState') {
+                //     result.bind(window)
+                // }
                 // window 原生方法的 this 指向必须绑在 window 上运行，否则会报错 "TypeError: Illegal invocation"
                 // e.g: const obj = {}; obj.alert = alert;  obj.alert();
                 return (isFunction(result) && needToBindOriginalWindow(result)) ? result.bind(window) : result
             },
 
             set: (target, key, value) => {
-                if (!this.active) return true
 
                 this.injectKeySet.add(key)
                 return Reflect.set(target, key, value)
             },
 
             has(target, key) {
-                temporarySetCurrentAppName(appName)
                 return key in target || key in originalWindow
             },
 
@@ -168,7 +167,6 @@ export default class ProxyWindowSandBox {
             // Object.getOwnPropertySymbols(window)
             // Reflect.ownKeys(window)
             ownKeys(target) {
-                temporarySetCurrentAppName(appName)
                 const result = Reflect.ownKeys(target).concat(Reflect.ownKeys(originalWindow))
                 return Array.from(new Set(result))
             },
@@ -198,7 +196,6 @@ export default class ProxyWindowSandBox {
 
             // Object.defineProperty(window, key, Descriptor)
             defineProperty: (target, key, value) => {
-                if (!this.active) return true
 
                 if (descriptorMap.get(key) === 'target') {
                     return Reflect.defineProperty(target, key, value)

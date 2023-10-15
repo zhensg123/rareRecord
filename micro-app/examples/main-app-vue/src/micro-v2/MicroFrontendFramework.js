@@ -1,7 +1,9 @@
 import overwriteApiAndSubscribeEvent from './utils/overwriteApiAndSubscribeEvent'
-import overwriteHeadAppendChild from './utils/overwriteHeadAppendChild'
 import {appendScript,appendLink,appendStyle } from './utils/appendSonAppResource'
 import {unloadLinkAndStyle, unloadScript} from './utils/unloadSonAppResource'
+import { releaseDocument } from './utils/patchDocument'
+import EventBus from './utils/EventBus'
+import {originalWindow} from './utils/originalEnv'
 
 export default class MicroFrontendFramework {
   constructor() {
@@ -13,9 +15,10 @@ export default class MicroFrontendFramework {
     return this.currentApp
   }
   static start() {
+    originalWindow.spaGlobalState = new EventBus()
+
     const instance = new MicroFrontendFramework();
     overwriteApiAndSubscribeEvent(instance.switchApp.bind(instance))
-    overwriteHeadAppendChild(instance.getCurrentApp.bind(instance))
     return instance;
   }
 
@@ -28,24 +31,28 @@ export default class MicroFrontendFramework {
       // 查找匹配的子应用
     const appName = Object.keys(this.apps).find(name => pathname.startsWith(this.apps[name].activeRule));
     if (appName) {
+      const app =  this.apps[appName]
       console.log(app, 'app')
       // 如果找到了匹配的子应用
       if (this.currentApp !== appName) {
         // 如果它不是当前的子应用，那么切换子应用
         if (this.currentApp) {
+          releaseDocument()
           this.unloadResources(this.currentApp).then(() => {
             this.loadHtml(app.pageEntry);
             this.currentApp = appName;
           });
+        }else {
+          this.loadHtml(app.pageEntry);
+          this.currentApp = appName;
         }
-        const app =  this.apps[appName]
-
         app.bootstrap && app.bootstrap()
-  
+        
       }
       // 如果它是当前的子应用，那么不做任何操作
     } else if (this.currentApp) {
       // 如果没有找到匹配的子应用，但是有当前的子应用，那么卸载当前的子应用
+      releaseDocument()
       this.unloadResources(this.currentApp);
       this.currentApp = null;
     }
@@ -56,7 +63,7 @@ export default class MicroFrontendFramework {
       const mountPoint = document.getElementById(app.mountPoint);
 
       // 清空mountPoint
-      mountPoint.innerHTML = '';
+      mountPoint && (mountPoint.innerHTML = '')
 
       unloadLinkAndStyle(name, 'link')
       unloadLinkAndStyle(name, 'style')
@@ -85,8 +92,10 @@ export default class MicroFrontendFramework {
     let mountPoint = document.getElementById(this.apps[this.currentApp].mountPoint);
     
     // 清空挂载点
-    while (mountPoint.firstChild) {
-      mountPoint.removeChild(mountPoint.firstChild);
+    if(mountPoint){
+      while (mountPoint.firstChild) {
+        mountPoint.removeChild(mountPoint.firstChild);
+      }
     }
 
 
@@ -98,13 +107,13 @@ export default class MicroFrontendFramework {
         fragmentForMountPoint.appendChild(childNode.cloneNode(true));
       }
     }
-    mountPoint.appendChild(fragmentForMountPoint);
+    mountPoint && mountPoint.appendChild(fragmentForMountPoint);
 
     appendStyle(doc.head, this.currentApp)
     appendLink(doc.head, this.currentApp)
 
-    appendScript(doc.head, 'head',this.currentApp)
-    appendScript(doc.body, 'body',this.currentApp)
+    appendScript(doc.head, this.currentApp)
+    appendScript(doc.body, this.currentApp)
 
     this.apps[this.currentApp].mount && this.apps[this.currentApp].mount()
   }

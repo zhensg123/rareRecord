@@ -8,7 +8,7 @@ export const originalWindowAddEventListener = window.addEventListener
 export const originalWindowRemoveEventListener = window.removeEventListener
 export const originalDocumentAddEventListener = document.addEventListener
 export const originalDocumentRemoveEventListener = document.removeEventListener
-export const originalEval = eval
+export const originalEval = window.eval
 export const originalDefineProperty = Object.defineProperty
 
 export const originalAppendChild = Element.prototype.appendChild
