@@ -132,7 +132,6 @@ export default {
 </script>
 <style lang="scss" scoped>
 #vs-container {
-  margin-top: 200px;
   margin-left: 20px;
   height: 200px;
   border: 1px solid #333;

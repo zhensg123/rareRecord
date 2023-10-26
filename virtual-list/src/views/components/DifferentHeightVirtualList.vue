@@ -96,7 +96,7 @@
         this.end = this.start + this.visibleCount
         const offsetHeight = scrollTop - (this.visibleData.reduce((acc, curVal) => acc + curVal.height, 0) - this.screenHeight)
         // 此时的偏移量
-        this.startOffset = offsetHeight < 0 ? 0 : offsetHeight
+        this.startOffset = offsetHeight
       }
     }
   }

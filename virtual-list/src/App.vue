@@ -1,8 +1,12 @@
 <template>
   <div id="app">
     <nav>
+      <router-link to="/same-height-virtual-list">定高统一高度虚拟列表</router-link> |
+      <router-link to="/different-height-virtual-list">定高不统一高度虚拟列表</router-link> |
+
       <router-link to="/noheight-virtual-list">不定高虚拟列表</router-link> |
-      <router-link to="/hasheight-virtual-list">定高虚拟列表</router-link>
+      <router-link to="/virtual-scroll">虚拟滚动</router-link> 
+
     </nav>
     <router-view/>
   </div>

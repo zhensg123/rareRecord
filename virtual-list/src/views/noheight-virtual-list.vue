@@ -1,7 +1,7 @@
 <template>
   <div class="render-show">
     <div>
-      <NoHasVirtualList :listData="data">
+      <NoHeightVirtualList :listData="data">
         <template slot-scope="{ item }">
           <codemirror
             class="unit"
@@ -9,13 +9,13 @@
             :options="cmOptions"
           ></codemirror>
         </template>
-      </NoHasVirtualList>
+      </NoHeightVirtualList>
     </div>
   </div>
 </template>
   
   <script>
-import NoHasVirtualList from "./components/NoHasVirtualList";
+import NoHeightVirtualList from "./components/NoHeightVirtualList";
 import { codemirror } from "vue-codemirror";
 
 import "codemirror/mode/javascript/javascript.js";
@@ -76,7 +76,7 @@ export default {
     };
   },
   components: {
-    NoHasVirtualList,
+    NoHeightVirtualList,
     codemirror,
   }
 };
@@ -84,7 +84,6 @@ export default {
   
     <style>
 .render-show {
-  justify-content: center;
   height: 100%;
 }
 .render-show > div {

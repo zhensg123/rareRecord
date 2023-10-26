@@ -7,6 +7,11 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
+    name: 'home',
+    redirect: '/virtual-scroll',
+  },
+  {
+    path: '/virtual-scroll',
     name: 'virtualScroll',
     component: virtualScroll
   },
@@ -16,9 +21,14 @@ const routes = [
     component: () => import(/* webpackChunkName: "virtual-list" */ '../views/noheight-virtual-list.vue')
   },
   {
-    path: '/hasheight-virtual-list',
-    name: 'hasheight-virtual-list',
-    component: () => import(/* webpackChunkName: "virtual-list" */ '../views/hasheight-virtual-list.vue')
+    path: '/same-height-virtual-list',
+    name: 'same-height-virtual-list',
+    component: () => import(/* webpackChunkName: "virtual-list" */ '../views/same-height-virtual-list.vue')
+  },
+  {
+    path: '/different-height-virtual-list',
+    name: 'different-height-virtual-list',
+    component: () => import(/* webpackChunkName: "virtual-list" */ '../views/different-height-virtual-list.vue')
   }
 ]
 
