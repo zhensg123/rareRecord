@@ -5,7 +5,8 @@
       <router-link to="/different-height-virtual-list">定高不统一高度虚拟列表</router-link> |
 
       <router-link to="/noheight-virtual-list">不定高虚拟列表</router-link> |
-      <router-link to="/virtual-scroll">虚拟滚动</router-link> 
+      <router-link to="/virtual-scroll">虚拟滚动</router-link> |
+      <router-link to="/virtual-scroll-virtual-list">基于虚拟滚动的虚拟列表</router-link> 
 
     </nav>
     <router-view/>

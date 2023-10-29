@@ -1,25 +1,28 @@
 <template>
   <div class="render-show">
     <div>
-      <NoHeightVirtualList :listData="data">
-        <template slot-scope="{ item }">
-          <codemirror
-            class="unit"
-            v-model="item.data"
-            :options="cmOptions"
-          ></codemirror>
+      <VirtualScrollVirtualList :listData="data">
+        <template slot-scope="{ item, index }">
+          <div class="codemirror-box">
+            {{ index
+            }}<codemirror
+              class="unit"
+              v-model="item.data"
+              :options="cmOptions"
+            ></codemirror>
+          </div>
         </template>
-      </NoHeightVirtualList>
+      </VirtualScrollVirtualList>
     </div>
   </div>
 </template>
-  
-  <script>
-import NoHeightVirtualList from "./components/NoHeightVirtualList";
+    
+<script>
+import VirtualScrollVirtualList from "./components/VirtualScrollVirtualList";
 import { codemirror } from "vue-codemirror";
 
 import "codemirror/mode/javascript/javascript.js";
-import 'codemirror/lib/codemirror.css'
+import "codemirror/lib/codemirror.css";
 import "codemirror/theme/monokai.css";
 function generateRandomNumber() {
   const min = 100;
@@ -51,16 +54,16 @@ function generateString(length) {
   return string;
 }
 const d = [];
-for (let i = 0; i < 500; i++) {
+for (let i = 0; i < 100; i++) {
   const length = generateRandomNumber();
   d.push({
     data: generateString(length),
     index: i,
   });
 }
-console.log(d, 'ddd')
+console.log(d, "ddd");
 export default {
-  name: "NoHasVirtualList-test",
+  name: "VirtualScrollVirtualList-test",
   data() {
     return {
       data: d,
@@ -72,39 +75,44 @@ export default {
         lineNumbers: true,
         line: true,
         lineWrapping: true, // 是否应滚动或换行以显示长行
-      }
+      },
     };
   },
   components: {
-    NoHeightVirtualList,
+    VirtualScrollVirtualList,
     codemirror,
-  }
+  },
 };
 </script>
-  
-    <style scoped>
+    
+<style lang="scss" scoped>
 .render-show {
   height: 100%;
 }
+
 .render-show > div {
   width: 800px;
   height: 100%;
   height: 400px;
 }
 
-.render-list-item {
-  color: #555;
-  box-sizing: border-box;
-  border-bottom: 1px solid #999;
-  box-sizing: border-box;
+.codemirror-box {
+  background: yellow;
 }
-.unit {
-  word-break: break-all;
-  padding: 0 20px;
-  background-color: #fff;
-}
-.unit + .unit {
-  margin-top: 20px;
+// .codemirror-box:nth-child(even) {
+//   background: blue;
+// }
+
+// .unit {
+//   word-break: break-all;
+//   padding: 0 20px;
+//   background-color: #fff;
+// }
+</style>
+    <style>
+.vue-codemirror.unit .CodeMirror {
+  height: auto !important;
+  min-height: 50px;
+  overflow: hidden;
 }
 </style>
-  

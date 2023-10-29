@@ -209,10 +209,9 @@
   </script>
   
       <style scoped>
-  .infinite-list-parent {
-    margin-left: 300px;
-    height: 100%;
-  }
+ .infinite-list-container::-webkit-scrollbar {
+  width:0;
+ }
   
   .infinite-list-container {
     overflow-x: hidden;
