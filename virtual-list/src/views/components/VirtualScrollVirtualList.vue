@@ -48,10 +48,13 @@ export default {
       type: Number,
       default: 100,
     },
-    // 容器高度 100px or 50vh
-    height: {
-      type: String,
-      default: "100%",
+    aboveCount: {
+      type: Number,
+      default: 3,
+    },
+    belowCount: {
+      type: Number,
+      default: 3,
     },
   },
   data() {
@@ -99,12 +102,6 @@ export default {
     },
     visibleCount() {
       return Math.ceil(this.screenHeight / this.itemSize);
-    },
-    aboveCount() {
-      return Math.min(this.start, 3);
-    },
-    belowCount() {
-      return Math.min(this.listData.length - this.end, 3);
     },
     visibleData() {
       const start = this.start;
@@ -180,7 +177,7 @@ export default {
         const { height } = this.positions[i];
         currentHeight += height;
 
-        if (currentHeight > offset) {
+        if (currentHeight >= offset) {
           return i;
         }
       }
@@ -191,10 +188,10 @@ export default {
       const footerIndex = this.findOffsetIndex(
         this.wheelOffset + this.screenHeight
       );
-      this.start = Math.max(headIndex - 3, 0);
-      this.end = Math.min(footerIndex + 3, this._listData.length);
+      this.start = Math.max(headIndex - this.aboveCount, 0);
+      this.end = Math.min(footerIndex + this.belowCount, this._listData.length);
       this.updateItemsSize()().then(() => {
-        if(by === "content"){
+        if (by === "content") {
           this.handleOffset = this.transferOffset();
         }
         this.contentOffset = this.wheelOffset - this.sumHeight(0, this.start);
@@ -212,7 +209,7 @@ export default {
         this.wheelOffset = Math.max(this.wheelOffset, 0);
         this.wheelOffset = Math.min(
           this.wheelOffset,
-          this.sumHeight(0, this.end) - containerOffsetHeight
+          this.listHeight - containerOffsetHeight
         );
         this.updateRenderIndex();
       };
@@ -235,8 +232,8 @@ export default {
                   startTop + deltaX,
                   $slider.offsetHeight - this.handleHeight
                 );
-                this.wheelOffset = this.transferOffset('content');
-                this.updateRenderIndex("handle");
+          this.wheelOffset = this.transferOffset("content");
+          this.updateRenderIndex("handle");
         };
 
         window.onmouseup = function () {
