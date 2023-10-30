@@ -139,7 +139,7 @@ export default {
       };
       return computedOffset[to]();
     },
-    updateItemsSizeByPromise() {
+    updateItemsSize() {
       return () => {
         return new Promise((resolve) => {
           const nodes = this.$refs.items;
@@ -193,7 +193,7 @@ export default {
       );
       this.start = Math.max(headIndex - 3, 0);
       this.end = Math.min(footerIndex + 3, this._listData.length);
-      this.updateItemsSizeByPromise()().then(() => {
+      this.updateItemsSize()().then(() => {
         if(by === "content"){
           this.handleOffset = this.transferOffset();
         }
@@ -269,8 +269,6 @@ export default {
   },
   created() {
     this.initPositions();
-    this._contentOffset = 0;
-    this._virtuallyScrollOffset = 0;
     this.$nextTick(() => {
       this.saveHtmlElementById();
     });

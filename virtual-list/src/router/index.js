@@ -16,6 +16,11 @@ const routes = [
     component: virtualScroll
   },
   {
+    path: '/virtualSroll-sameHeight-virtualList',
+    name: 'virtualSroll-sameHeight-virtualList',
+    component: () => import(/* webpackChunkName: "virtual-list" */ '../views/virtualSroll-sameHeight-virtualList.vue')
+  },
+  {
     path: '/virtual-scroll-virtual-list',
     name: 'virtual-scroll-virtual-list',
     component: () => import(/* webpackChunkName: "virtual-list" */ '../views/virtual-scroll-virtual-list.vue')
