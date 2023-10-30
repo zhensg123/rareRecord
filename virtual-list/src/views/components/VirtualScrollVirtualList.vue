@@ -36,7 +36,7 @@ export default {
     },
     itemSize: {
       type: Number,
-      default: 100,
+      default: 50,
     },
     aboveCount: {
       type: Number,
@@ -104,6 +104,60 @@ export default {
         bottom: (index + 1) * this.itemSize,
       }));
     },
+    updateItemsSize() {
+      return new Promise((resolve) => {
+        this.$nextTick(() => {
+          const nodes = this.$refs.items;
+          nodes.forEach((node) => {
+            // 获取元素自身的属性
+            const rect = node.getBoundingClientRect();
+            const height = rect.height;
+            const index = +node.id;
+            const oldHeight = this.positions[index].height;
+            const dValue = oldHeight - height;
+            // 存在差值
+            if (dValue) {
+              this.positions[index].bottom =
+                this.positions[index].bottom - dValue;
+              this.positions[index].height = height;
+              this.positions[index].over = true; // TODO
+
+              for (let k = index + 1; k < this.positions.length; k++) {
+                this.positions[k].top = this.positions[k - 1].bottom;
+                this.positions[k].bottom = this.positions[k].bottom - dValue;
+              }
+            }
+          });
+          resolve();
+        });
+      });
+    },
+    sumHeight(start = 0, end = 100) {
+      let height = 0;
+      for (let i = start; i < end; i++) {
+        height += this.positions[i].height;
+      }
+      return height;
+    },
+    findOffsetIndex(offset) {
+      let currentHeight = 0;
+      for (let i = 0; i < this.positions.length; i++) {
+        const { height } = this.positions[i];
+        currentHeight += height;
+
+        if (currentHeight > offset) {
+          return i;
+        }
+      }
+      return this.positions.length - 1;
+    },
+    resetWheelOffset() {
+      // 因为真实高度更新可能会滞后
+      this.wheelOffset = Math.min(
+        this.wheelOffset,
+        this.listHeight - this.containerOffsetHeight
+      );
+    },
     transferOffset(to = "handle") {
       const { $container, $slider } = this.$element;
       const contentSpace = this.listHeight - $container.offsetHeight;
@@ -120,51 +174,6 @@ export default {
       };
       return computedOffset[to]();
     },
-    updateItemsSize() {
-      return new Promise((resolve) => {
-        const nodes = this.$refs.items;
-        nodes.forEach((node) => {
-          // 获取元素自身的属性
-          const rect = node.getBoundingClientRect();
-          const height = rect.height;
-          const index = +node.id;
-          const oldHeight = this.positions[index].height;
-          const dValue = oldHeight - height;
-          // 存在差值
-          if (dValue) {
-            this.positions[index].bottom =
-              this.positions[index].bottom - dValue;
-            this.positions[index].height = height;
-            this.positions[index].over = true; // TODO
-
-            for (let k = index + 1; k < this.positions.length; k++) {
-              this.positions[k].top = this.positions[k - 1].bottom;
-              this.positions[k].bottom = this.positions[k].bottom - dValue;
-            }
-          }
-        });
-        resolve();
-      });
-    },
-    sumHeight(start = 0, end = 100) {
-      let height = 0;
-      for (let i = start; i < end; i++) {
-        height += this.positions[i].height;
-      }
-      return height;
-    },
-    findOffsetIndex(offset) {
-      let currentHeight = 0;
-      for (let i = 0; i < this.positions.length; i++) {
-        const { height } = this.positions[i];
-        currentHeight += height;
-
-        if (currentHeight >= offset) {
-          return i;
-        }
-      }
-      return this.positions.length - 1;
-    },
     updateRenderIndex(by = "content") {
       const headIndex = this.findOffsetIndex(this.wheelOffset);
       const footerIndex = this.findOffsetIndex(
@@ -172,17 +181,20 @@ export default {
       );
       this.start = Math.max(headIndex - this.aboveCount, 0);
       this.end = Math.min(footerIndex + this.belowCount, this._listData.length);
+
       this.updateItemsSize().then(() => {
         if (by === "content") {
           this.handleOffset = this.transferOffset();
+          this.resetWheelOffset();
         }
+
         this.contentOffset = this.wheelOffset - this.sumHeight(0, this.start);
       });
     },
     // 为盒子绑定事件 监听滚轮距离或鼠标滚动距离
     bindContainerEvent() {
       const { $container } = this.$element;
-      const containerOffsetHeight = $container.offsetHeight;
+      this.containerOffsetHeight = $container.offsetHeight;
       this.wheelOffset = 0;
       const bindContainerOffset = (event) => {
         event.preventDefault();
@@ -191,7 +203,7 @@ export default {
         this.wheelOffset = Math.max(this.wheelOffset, 0);
         this.wheelOffset = Math.min(
           this.wheelOffset,
-          this.listHeight - containerOffsetHeight
+          this.listHeight - this.containerOffsetHeight
         );
         this.updateRenderIndex();
       };
