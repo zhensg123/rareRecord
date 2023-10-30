@@ -1,15 +1,5 @@
 <template>
-  <div
-    ref="container"
-    class="infinite-list-container"
-    @scroll="scrollEvent($event)"
-  >
-    <!-- 占位div -->
-    <!-- <div
-        class="infinite-list-phantom"
-        :style="{ height: listHeight + 'px' }"
-      ></div> -->
-
+  <div ref="container" class="infinite-list-container">
     <div :style="{ transform: contentTransform }" class="infinite-list">
       <div
         ref="items"
@@ -66,9 +56,6 @@ export default {
       // 结束索引
       end: 0,
 
-      // 其实索引偏移量
-      startOffset: 0,
-
       // 缓存位置数组
       positions: [],
       handleOffset: 0,
@@ -104,10 +91,7 @@ export default {
       return Math.ceil(this.screenHeight / this.itemSize);
     },
     visibleData() {
-      const start = this.start;
-      const end = this.end;
-
-      return this._listData.slice(start, end);
+      return this._listData.slice(this.start, this.end);
     },
   },
   methods: {
@@ -137,32 +121,30 @@ export default {
       return computedOffset[to]();
     },
     updateItemsSize() {
-      return () => {
-        return new Promise((resolve) => {
-          const nodes = this.$refs.items;
-          nodes.forEach((node) => {
-            // 获取元素自身的属性
-            const rect = node.getBoundingClientRect();
-            const height = rect.height;
-            const index = +node.id;
-            const oldHeight = this.positions[index].height;
-            const dValue = oldHeight - height;
-            // 存在差值
-            if (dValue) {
-              this.positions[index].bottom =
-                this.positions[index].bottom - dValue;
-              this.positions[index].height = height;
-              this.positions[index].over = true; // TODO
+      return new Promise((resolve) => {
+        const nodes = this.$refs.items;
+        nodes.forEach((node) => {
+          // 获取元素自身的属性
+          const rect = node.getBoundingClientRect();
+          const height = rect.height;
+          const index = +node.id;
+          const oldHeight = this.positions[index].height;
+          const dValue = oldHeight - height;
+          // 存在差值
+          if (dValue) {
+            this.positions[index].bottom =
+              this.positions[index].bottom - dValue;
+            this.positions[index].height = height;
+            this.positions[index].over = true; // TODO
 
-              for (let k = index + 1; k < this.positions.length; k++) {
-                this.positions[k].top = this.positions[k - 1].bottom;
-                this.positions[k].bottom = this.positions[k].bottom - dValue;
-              }
+            for (let k = index + 1; k < this.positions.length; k++) {
+              this.positions[k].top = this.positions[k - 1].bottom;
+              this.positions[k].bottom = this.positions[k].bottom - dValue;
             }
-          });
-          resolve();
+          }
         });
-      };
+        resolve();
+      });
     },
     sumHeight(start = 0, end = 100) {
       let height = 0;
@@ -190,7 +172,7 @@ export default {
       );
       this.start = Math.max(headIndex - this.aboveCount, 0);
       this.end = Math.min(footerIndex + this.belowCount, this._listData.length);
-      this.updateItemsSize()().then(() => {
+      this.updateItemsSize().then(() => {
         if (by === "content") {
           this.handleOffset = this.transferOffset();
         }

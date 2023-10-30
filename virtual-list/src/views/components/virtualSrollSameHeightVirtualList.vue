@@ -2,7 +2,6 @@
   <div
     ref="container"
     class="infinite-list-container"
-    @scroll="scrollEvent($event)"
   >
     <div :style="{ transform: contentTransform }" class="infinite-list">
       <div
