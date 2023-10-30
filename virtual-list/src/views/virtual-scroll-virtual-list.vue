@@ -54,7 +54,7 @@ function generateString(length) {
   return string;
 }
 const d = [];
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 300; i++) {
   const length = generateRandomNumber();
   d.push({
     data: generateString(length),

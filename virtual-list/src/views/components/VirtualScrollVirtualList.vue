@@ -97,9 +97,6 @@ export default {
     listHeight() {
       return this.positions[this.positions.length - 1].bottom;
     },
-    anchorPoint() {
-      return this.positions.length ? this.positions[this.start] : null;
-    },
     visibleCount() {
       return Math.ceil(this.screenHeight / this.itemSize);
     },
@@ -126,55 +123,21 @@ export default {
         bottom: (index + 1) * this.itemSize,
       }));
     },
-    // 获取列表起始索引
-    getStartIndex(scrollTop = 0) {
-      // 二分法查找
-      return this.binarySearch(this.positions, scrollTop);
-    },
-    // 二分法查找 用于查找开始索引
-    binarySearch(list, value) {
-      let start = 0;
-      let end = list.length - 1;
-      let tempIndex = null;
-
-      while (start <= end) {
-        const midIndex = parseInt((start + end) / 2);
-        const midValue = list[midIndex].bottom;
-        if (midValue === value) {
-          return midIndex + 1;
-        } else if (midValue < value) {
-          start = midIndex + 1;
-        } else if (midValue > value) {
-          if (tempIndex === null || tempIndex > midIndex) {
-            tempIndex = midIndex;
-          }
-          end = end - 1;
-        }
-      }
-      return tempIndex || 0;
-    },
-    // 修正内容高度
-    updateItemsSize() {
-      const nodes = this.$refs.items;
-      nodes.forEach((node) => {
-        // 获取元素自身的属性
-        const rect = node.getBoundingClientRect();
-        const height = rect.height;
-        const index = +node.id;
-        const oldHeight = this.positions[index].height;
-        const dValue = oldHeight - height;
-        // 存在差值
-        if (dValue) {
-          this.positions[index].bottom = this.positions[index].bottom - dValue;
-          this.positions[index].height = height;
-          this.positions[index].over = true; // TODO
-
-          for (let k = index + 1; k < this.positions.length; k++) {
-            this.positions[k].top = this.positions[k - 1].bottom;
-            this.positions[k].bottom = this.positions[k].bottom - dValue;
-          }
-        }
-      });
+    transferOffset(to = "handle") {
+      const { $container, $slider } = this.$element;
+      const contentSpace = this.listHeight - $container.offsetHeight;
+      const handleSpace = $slider.offsetHeight - this.handleHeight;
+      const assistRatio = handleSpace / contentSpace; // 小于1
+      const _this = this;
+      const computedOffset = {
+        handle() {
+          return _this.wheelOffset * assistRatio;
+        },
+        content() {
+          return _this.handleOffset / assistRatio;
+        },
+      };
+      return computedOffset[to]();
     },
     updateItemsSizeByPromise() {
       return () => {
@@ -204,15 +167,13 @@ export default {
         });
       };
     },
-    sumHeight(start = 0, end = list.length) {
+    sumHeight(start = 0, end = 100) {
       let height = 0;
       for (let i = start; i < end; i++) {
         height += this.positions[i].height;
       }
-
       return height;
     },
-
     findOffsetIndex(offset) {
       let currentHeight = 0;
       for (let i = 0; i < this.positions.length; i++) {
@@ -223,88 +184,45 @@ export default {
           return i;
         }
       }
-
       return this.positions.length - 1;
     },
-    // 更新偏移量
-    setContentOffset() {
-      //   this.contentOffset = -this._virtuallyScrollOffset
-
-      if (this._contentOffset < 0) {
-        this.contentOffset = -(
-          this._contentOffset + this.positions[this.start].bottom
-        );
-      } else {
-        this.contentOffset = 0;
-      }
-      //   this.contentOffset = this.contentOffset > 0 ? 0 : this.contentOffset;
-    },
-    updateIndex(offset) {
-      const headIndex = this.findOffsetIndex(offset);
-      const tailIndex = this.findOffsetIndex(offset + this.screenHeight);
+    updateRenderIndex(by = "content") {
+      const headIndex = this.findOffsetIndex(this.wheelOffset);
+      const footerIndex = this.findOffsetIndex(
+        this.wheelOffset + this.screenHeight
+      );
       this.start = Math.max(headIndex - 3, 0);
-      this.end = Math.min(tailIndex + 3, this._listData.length);
+      this.end = Math.min(footerIndex + 3, this._listData.length);
       this.updateItemsSizeByPromise()().then(() => {
-        // this.setContentOffset();
-
-        // const offset = offset;
-        // const headIndex = this.findOffsetIndex(offset);
-        // const tailIndex = this.findOffsetIndex(offset + this.screenHeight);
-
-        console.log(offset, "this._contentOffset");
-        //     if (this._contentOffset < 0) {
-        //     this.contentOffset = -(
-        //       this._contentOffset + this.positions[this.start].bottom
-        //     );
-        //   } else {
-        //     this.contentOffset = 0;
-        //   }
-        this.contentOffset = offset - this.sumHeight(0, this.start);
+        if(by === "content"){
+          this.handleOffset = this.transferOffset();
+        }
+        this.contentOffset = this.wheelOffset - this.sumHeight(0, this.start);
       });
     },
-    transferOffset(to = "handle") {
-      const { $container, $slider } = this.$element;
-      const contentSpace = $container.scrollHeight - $container.offsetHeight;
-      const handleSpace = $slider.offsetHeight - this.handleHeight;
-      const assistRatio = handleSpace / contentSpace; // 小于1
-      const _this = this;
-      const computedOffset = {
-        handle() {
-          return -_this.contentOffset * assistRatio;
-        },
-        content() {
-          return -_this.handleOffset / assistRatio;
-        },
-      };
-      return computedOffset[to]();
-    },
+    // 为盒子绑定事件 监听滚轮距离或鼠标滚动距离
     bindContainerEvent() {
       const { $container } = this.$element;
-      const contentSpace = this.listHeight - $container.offsetHeight;
-      let y = 0;
-      //   console.log($container.offsetHeight, this.listHeight)
+      const containerOffsetHeight = $container.offsetHeight;
+      this.wheelOffset = 0;
       const bindContainerOffset = (event) => {
         event.preventDefault();
 
-        y += event.deltaY;
-        y = Math.max(y, 0);
-        y = Math.min(y, this.listHeight - $container.offsetHeight);
-console.log(y, 'dedede')
-        this.updateIndex(y);
+        this.wheelOffset += -event.wheelDeltaY;
+        this.wheelOffset = Math.max(this.wheelOffset, 0);
+        this.wheelOffset = Math.min(
+          this.wheelOffset,
+          this.sumHeight(0, this.end) - containerOffsetHeight
+        );
+        this.updateRenderIndex();
       };
       $container.addEventListener("wheel", bindContainerOffset);
-      //   $container.addEventListener("wheel", updateContentOffset);
-
-      //   $container.addEventListener("wheel", updateHandleOffset);
-
       this.unbindContainerEvent = () => {
         $container.removeEventListener("wheel", bindContainerOffset);
-        $container.removeEventListener("wheel", updateContentOffset);
       };
     },
     bindHandleEvent() {
       const { $slider, $handle } = this.$element;
-      const handleSpace = $slider.offsetHeight - this.handleHeight;
       $handle.onmousedown = (e) => {
         const startY = e.clientY;
         const startTop = this.handleOffset;
@@ -313,8 +231,12 @@ console.log(y, 'dedede')
           this.handleOffset =
             startTop + deltaX < 0
               ? 0
-              : Math.min(startTop + deltaX, handleSpace);
-          this.contentOffset = this.transferOffset("content");
+              : Math.min(
+                  startTop + deltaX,
+                  $slider.offsetHeight - this.handleHeight
+                );
+                this.wheelOffset = this.transferOffset('content');
+                this.updateRenderIndex("handle");
         };
 
         window.onmouseup = function () {
@@ -332,7 +254,7 @@ console.log(y, 'dedede')
       };
       this.initHandleHeight();
       this.bindContainerEvent();
-      //   this.bindHandleEvent()
+      this.bindHandleEvent();
     },
     initHandleHeight() {
       const { $container, $slider } = this.$element;
@@ -355,7 +277,6 @@ console.log(y, 'dedede')
   },
   mounted() {
     this.screenHeight = this.$el.clientHeight;
-    console.log(this.screenHeight, "this.screenHeight");
     this.start = 0;
     this.end = this.start + this.visibleCount;
   },
@@ -410,7 +331,8 @@ console.log(y, 'dedede')
   padding: 0 20px;
 }
 .infinite-list-item-container + .infinite-list-item-container {
-  margin-top: 20px;
+  // margin-top: 20px;
+  padding-top: 20px;
 }
 </style>
   
