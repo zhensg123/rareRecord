@@ -1,10 +1,10 @@
 import {  getPutDataToElement } from './util'
+import {  bofang, zanting } from './base64'
 
 class UtmostLive {
     constructor(options) {
         this.ulContainer = null // 容器
         this.ulVideo = null // 视频
-        this.ulHandleIcon = null // 操作图标
         this.init(options)
     }
 
@@ -17,12 +17,11 @@ class UtmostLive {
         this.options = Object.assign({}, options, defaults)
         this.appendHtmlDom()
     }
+    
     createUtmostLiveContainer() {
         const div = document.createElement('div')
         div.id = 'utmost_live'
-        div.style = `position: fixed;
-    bottom:20px;
-    right: 0;`
+        div.style = `position: fixed;bottom:20px;right: 0;`
         return div
     }
     createUtmostLiveVideo() {
@@ -33,7 +32,7 @@ class UtmostLive {
         this.ulVideo.style = `width: 0;height: 0;`
         this.ulVideo.loop = true
         // video.muted = true
-        this.ulVideo.autoplay = true
+        // this.ulVideo.autoplay = true
         const computeFrame = () => {
             const { width, height } = this.options
             getPutDataToElement(this.ulCanvasCtx, this.ulVideo, width, height)
@@ -51,13 +50,19 @@ class UtmostLive {
     bottom: 190px;
     right: 80px;
     cursor: pointer;`
-    imgIcon.title = '播放'
-        imgIcon.setAttribute('src', "/assets/bofang.png")
+        imgIcon.title = '播放'
+        imgIcon.setAttribute('src', bofang)
+        imgIcon.className = 'bofang'
+
         imgIcon.addEventListener('click', () => {
-            const src = imgIcon.getAttribute('src')
-            imgIcon.setAttribute('src', src.indexOf('zanting') >  -1 ? '/assets/bofang.png' : '/assets/zantingbofang.png')
-            imgIcon.title = src.indexOf('zanting') >  -1 ? '播放' : '暂停'
-            src.indexOf('zanting') >  -1  ? this.ulVideo.pause() : this.ulVideo.play()
+            const className = imgIcon.className
+            const status = className.indexOf('bofang') >  -1
+            imgIcon.className = status ? 'zanting' : 'bofang'
+
+            imgIcon.setAttribute('src', status ? zanting : bofang)
+            imgIcon.title = status ? '播放' : '暂停'
+            imgIcon.alt = status ? '播放' : '暂停'
+            status  ? this.ulVideo.play() : this.ulVideo.pause()
         })
         return imgIcon
     }
@@ -69,9 +74,12 @@ class UtmostLive {
         this.ulCanvas.setAttribute('width', width)
         this.ulCanvas.setAttribute('height', height)
 
-        this.ulContainer.appendChild(this.ulCanvas)
         this.ulCanvasCtx = this.ulCanvas.getContext('2d');
-
+        this.initVideoCover()
+        
+        return this.ulCanvas
+    }
+    initVideoCover(){
         const img = new Image();
         img.onload = () => {
             // 如果视频比例和canvas比例不正确可能会出现显示形变， 调整除的值进行比例调整
@@ -79,15 +87,14 @@ class UtmostLive {
             getPutDataToElement(this.ulCanvasCtx, img, width, height)
         };
         img.src = '/assets/zhubo.jpg'
-        return this.ulCanvas
     }
     appendHtmlDom() {
         this.ulContainer = this.createUtmostLiveContainer()
-        this.ulVideo = this.createUtmostLiveVideo()
+        const video = this.createUtmostLiveVideo()
         const icon = this.createUtmostLiveIcon()
         const canvas = this.createUtmostLiveCanvas()
 
-        this.ulContainer.appendChild(this.ulVideo)
+        this.ulContainer.appendChild(video)
         this.ulContainer.appendChild(icon)
         this.ulContainer.appendChild(canvas)
 
