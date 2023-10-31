@@ -5,6 +5,7 @@ class UtmostLive {
     constructor(options) {
         this.ulContainer = null // 容器
         this.ulVideo = null // 视频
+        this.scale = 1
         this.init(options)
     }
 
@@ -25,19 +26,30 @@ class UtmostLive {
         return div
     }
     createUtmostLiveVideo() {
+        const { width, height } = this.options
+
         this.ulVideo = document.createElement('video')
         this.ulVideo.setAttribute('src', '/assets/sales_5.mp4')
 
         this.ulVideo.id = 'utmost_live_video'
-        this.ulVideo.style = `width: 0;height: 0;`
+        this.ulVideo.style = `width: 0;height: 0px;`
         this.ulVideo.loop = true
         // video.muted = true
         // this.ulVideo.autoplay = true
         const computeFrame = () => {
-            const { width, height } = this.options
             getPutDataToElement(this.ulCanvasCtx, this.ulVideo, width, height)
             setTimeout(computeFrame, 0);
         }
+        let setTimeoutMemory = null
+        this.ulVideo.addEventListener('canplay', ()=> {
+            console.log('The video has started to play');
+            // const { width, height } = this.options
+            console.log(this.ulCanvasCtx, this.ulVideo, 'this.ulVideo', width, height)
+            clearTimeout(setTimeoutMemory)
+            setTimeoutMemory = setTimeout(()=>{
+                getPutDataToElement(this.ulCanvasCtx, this.ulVideo, width, height)
+            }, 55)
+        })
         this.ulVideo.addEventListener('play', computeFrame)
         return this.ulVideo
     }
@@ -75,7 +87,7 @@ class UtmostLive {
         this.ulCanvas.setAttribute('height', height)
 
         this.ulCanvasCtx = this.ulCanvas.getContext('2d');
-        this.initVideoCover()
+        // this.initVideoCover()
         
         return this.ulCanvas
     }
@@ -90,13 +102,13 @@ class UtmostLive {
     }
     appendHtmlDom() {
         this.ulContainer = this.createUtmostLiveContainer()
-        const video = this.createUtmostLiveVideo()
         const icon = this.createUtmostLiveIcon()
         const canvas = this.createUtmostLiveCanvas()
+        const video = this.createUtmostLiveVideo()
 
-        this.ulContainer.appendChild(video)
         this.ulContainer.appendChild(icon)
         this.ulContainer.appendChild(canvas)
+        this.ulContainer.appendChild(video)
 
         document.body.appendChild(this.ulContainer)
     }
