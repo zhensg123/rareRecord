@@ -1,4 +1,7 @@
 const htmlWebpackPlugin = require('html-webpack-plugin')
+// var { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 const path = require('path')
 module.exports = {
   entry: './src/index.js',
@@ -10,11 +13,22 @@ module.exports = {
     globalObject: 'this',
     umdNamedDefine: true
   },
-  plugins: [new htmlWebpackPlugin({
+  plugins: [
+    new htmlWebpackPlugin({
     template: './index.html',
     filename: './index.html',
     inject: true
-  })],
+  }),  		
+  // new CleanWebpackPlugin(),
+  new CopyWebpackPlugin({
+    patterns:[
+       {
+        from: path.resolve(__dirname, './assets'), // 静态资源绝对路径
+        to: path.resolve(__dirname, './dist/assets')  // 打包进入静态文件夹
+        }
+      ]
+    }),
+  ],
   devtool: 'source-map',
   module: {
     rules:[
