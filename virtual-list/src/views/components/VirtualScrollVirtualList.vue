@@ -175,6 +175,7 @@ export default {
       return computedOffset[to]();
     },
     updateRenderIndex(by = "content") {
+      console.log(this.wheelOffset, 'dedede')
       const headIndex = this.findOffsetIndex(this.wheelOffset);
       const footerIndex = this.findOffsetIndex(
         this.wheelOffset + this.screenHeight
@@ -205,7 +206,16 @@ export default {
           this.wheelOffset,
           this.listHeight - this.containerOffsetHeight
         );
-        this.updateRenderIndex();
+
+         // 节流
+         if (this.settimebind) {
+          return
+        }
+        this.settimebind = setTimeout(() => {
+          this.settimebind = null
+          this.updateRenderIndex()
+        }, 20)
+        // this.updateRenderIndex();
       };
       $container.addEventListener("wheel", bindContainerOffset);
       this.unbindContainerEvent = () => {
@@ -268,6 +278,8 @@ export default {
     this.screenHeight = this.$el.clientHeight;
     this.start = 0;
     this.end = this.start + this.visibleCount;
+    this.wheelOffset = 15449
+    this.updateRenderIndex()
   },
 };
 </script>
