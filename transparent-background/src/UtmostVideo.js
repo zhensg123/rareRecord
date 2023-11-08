@@ -4,7 +4,7 @@ import { ajax } from './xhr'
 class UtmostVideo {
     constructor(live) {
         const { options } = live
-        const { text, scale} = options
+        const { text, scale, token, url} = options
         const defaults = {
             width: 300,
             height: 500,
@@ -13,7 +13,9 @@ class UtmostVideo {
         }
         this.options = Object.assign({}, defaults, {
             text,
-            scale
+            scale,
+            token,
+            url
         })
 
         this.ulContainer = null // 容器
@@ -25,13 +27,14 @@ class UtmostVideo {
 
     init() {
         ajax({
-            url: 'http://localhost:2222/text-to-video',
+            url: this.options.url || 'http://localhost:2222/text-to-video',
             method: 'post',
             data: {
                 text: this.options.text,
                 voice: 'zhimao',
                 "ifstream": 1
-            }
+            },
+            token: this.options.token
         }).then((res) => {
             console.log(res, 'res')
             var blob = new Blob([res]);
@@ -62,7 +65,7 @@ class UtmostVideo {
     createUtmostLiveContainer() {
         const div = document.createElement('div')
         div.id = 'utmost_live'
-        div.style = `position: fixed;bottom:20px;right: 0;`
+        div.style = `position: fixed;bottom:20px;right: 0;z-index:10000;transform:scale(${this.options.scale})`
         return div
     }
     createUtmostLiveVideo() {
@@ -73,7 +76,7 @@ class UtmostVideo {
 
         this.ulVideo.id = 'utmost_live_video'
         this.ulVideo.style = `width: 0;height: 0px;`
-        this.ulVideo.loop = true
+        this.ulVideo.loop = false
         this.ulVideo.crossOrigin = ''
         // video.muted = true
         // this.ulVideo.autoplay = true
@@ -82,15 +85,18 @@ class UtmostVideo {
             setTimeout(computeFrame, 0);
         }
         let setTimeoutMemory = null
-        // this.ulVideo.addEventListener('canplay', ()=> {
-        //     console.log('The video has started to play');
-        //     // const { width, height } = this.options
-        //     console.log(this.ulCanvasCtx, this.ulVideo, 'this.ulVideo', width, height)
-        //     clearTimeout(setTimeoutMemory)
-        //     setTimeoutMemory = setTimeout(()=>{
-        //         getPutDataToElement(this.ulCanvasCtx, this.ulVideo, width, height)
-        //     }, 55)
-        // })
+        this.ulVideo.addEventListener('canplay', ()=> {
+            console.log('The video has started to play');
+            // const { width, height } = this.options
+            console.log(this.ulCanvasCtx, this.ulVideo, 'this.ulVideo', width, height)
+            clearTimeout(setTimeoutMemory)
+            setTimeoutMemory = setTimeout(()=>{
+                const icon = this.createUtmostLiveIcon()
+                this.ulContainer.appendChild(icon)
+
+                getPutDataToElement(this.ulCanvasCtx, this.ulVideo, width, height)
+            }, 55)
+        })
         this.ulVideo.addEventListener('play', computeFrame)
         return this.ulVideo
     }
@@ -128,7 +134,7 @@ cursor: pointer;`
         this.ulCanvas.setAttribute('height', height)
 
         this.ulCanvasCtx = this.ulCanvas.getContext('2d');
-        this.initVideoCover()
+        // this.initVideoCover()
 
         return this.ulCanvas
     }
@@ -144,11 +150,9 @@ cursor: pointer;`
     }
     appendHtmlDom() {
         this.ulContainer = this.createUtmostLiveContainer()
-        const icon = this.createUtmostLiveIcon()
         const canvas = this.createUtmostLiveCanvas()
         const video = this.createUtmostLiveVideo()
 
-        this.ulContainer.appendChild(icon)
         this.ulContainer.appendChild(canvas)
         this.ulContainer.appendChild(video)
 

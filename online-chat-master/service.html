@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>客服界面</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            padding-bottom: 59px;
+            box-sizing: border-box;
+            background-color: #f7f6fb;
+            font-family: 'Avenir', Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .inputs {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .chat-content {
+            height: calc(100% - 132px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .chat-content .self-msg {
+            text-align: right;
+            padding: 0 10px;
+            margin-top: 10px;
+        }
+
+        .chat-content .other-msg {
+            text-align: left;
+            padding: 0 10px;
+            margin-top: 10px;
+        }
+
+        .chat-content .sys-msg {
+            padding: 0 10px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .chat-content .other-msg > span {
+            display: inline-block;
+            padding: 15px 20px 15px 15px;
+            background-color: #e4e4e4;
+            max-width: 100%;
+            white-space: pre-wrap;
+            white-space: pre-line;
+            word-break: break-word;
+            text-align: left;
+            color: #525252;
+            border-top-right-radius: 20px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            -webkit-animation: slide-right .2s ease-in-out;
+            animation: slide-right .2s ease-in-out;
+        }
+
+        .chat-content .self-msg > span {
+            display: inline-block;
+            padding: 15px 20px 15px 15px;
+            background-color: #4592e2;
+            max-width: 100%;
+            white-space: pre-wrap;
+            white-space: pre-line;
+            word-break: break-word;
+            text-align: left;
+            color: #ffffff;
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            -webkit-animation: slide-left .2s ease-in-out;
+            animation: slide-left .2s ease-in-out;
+        }
+
+        .chat-content .sys-msg > span {
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            background-color: #d8d8d8;
+            color: #ffffff;
+            -webkit-animation: fade-in .2s ease-in-out;
+            animation: fade-in .2s ease-in-out;
+        }
+
+        .inputs > input {
+            border: none;
+            font-size: 16px;
+        }
+
+        .inputs > input:focus {
+            border: none;
+            outline: none;
+        }
+
+        .inputs > input[type="text"] {
+            display: inline-block;
+            width: 100%;
+            padding: 20px 10px;
+        }
+
+        .inputs > .submit {
+            display: inline-block;
+            padding: 20px;
+            background-color: #4592e2;
+            color: #ffffff;
+        }
+
+        .inputs > input[type="button"] {
+            display: inline-block;
+            padding: 20px;
+            background-color: #4592e2;
+            color: #ffffff;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-1 {
+            flex: 1;
+        }
+
+        .user-info, .deal-info {
+            padding: 15px 15px;
+            background-color: #ffffff;
+        }
+
+        .deal-info {
+            border-top: solid 1px #ddd;
+        }
+
+        .title {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .content {
+            font-size: 20px;
+            color: #4592e2;
+            margin-top: 10px;
+        }
+
+        .right-text {
+            padding-top: 20px;
+            font-size: 20px;
+            color: #4592e2;
+        }
+
+        .icon-right-arrow {
+            position: relative;
+        }
+
+        .icon-right-arrow:after {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-right: solid 2px #ddd;
+            border-bottom: solid 2px #ddd;
+            transform: rotate(-45deg);
+        }
+
+        @keyframes slide-left {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @-webkit-keyframes slide-left {
+            from {
+                -webkit-transform: translateX(100%);
+            }
+            to {
+                -webkit-transform: translateX(0);
+            }
+        }
+
+        @keyframes slide-right {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @-webkit-keyframes slide-right {
+            from {
+                -webkit-transform: translateX(-100%);
+            }
+            to {
+                -webkit-transform: translateX(0);
+            }
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @-webkit-keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="user-info flex">
+    <p class="flex-1" style="text-align: left;">
+        <span id="userName"></span>
+        <i class="icon icon-right-arrow"></i>
+    </p>
+</div>
+<div class="deal-info flex">
+    <div class="flex-1" style="text-align: left;">
+        <p class="title">用户的一些描述...</p>
+    </div>
+</div>
+<div class="chat-content" id="chatContent">
+
+</div>
+<div class="inputs flex">
+    <input type="text" id="msgInput" class="flex-1" placeholder="在此输入你的对话">
+    <p class="submit" id="msgSubmit">
+        发送
+    </p>
+</div>
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    let query = {};
+    (function(w){
+        if(!w.location.search) return
+        let idInfo = w.location.search.split('?')[1]
+        let arrIds = idInfo.split('&')
+        arrIds.forEach(eachId => {
+            let split = eachId.split('=')
+            query[split[0]] = split[1]
+        })
+    })(window);
+    let userInfo = {
+        customer: {
+            id: query.cid
+        },
+        service: {
+            id: query.sid,
+            isSender: true
+        }
+    }
+    window.onload = () => {
+        let userName = document.getElementById('userName')
+        let input = document.getElementById('msgInput')
+        let submit = document.getElementById('msgSubmit')
+        let socket = io()
+        socket.emit('new chat', userInfo)
+
+        userName.innerText = '用户'+query.cid
+
+        submit.addEventListener('click', function(){
+            if(input.value){
+                socket.emit('send private message', {
+                    msg: input.value,
+                    userInfo
+                })
+                input.value = ''
+            } else {
+                alert('请输入内容')
+            }
+        })
+
+        socket.on('callback private message', function (res) {
+            receiveMsg(res)
+        })
+        socket.on('disconnect', function(){
+            console.log('断线了...')
+            receiveMsg({
+                msg: '您断线了，请刷新重连',
+                sysMsg: true
+            })
+        })
+    }
+    function receiveMsg(data){
+        let chatContent = document.getElementById('chatContent')
+        if(!chatContent){
+            return
+        }
+        let newMsg = document.createElement('div')
+        let msgContent = document.createElement('span')
+
+        newMsg.append(msgContent)
+        msgContent.innerText = data.msg
+
+        if(data.self === true){
+            newMsg.classList.add('self-msg')
+        } else if(data.self === false) {
+            newMsg.classList.add('other-msg')
+        } else if(data.sysMsg){
+            newMsg.classList.add('sys-msg')
+        }
+        chatContent.append(newMsg)
+    }
+</script>
+</html>

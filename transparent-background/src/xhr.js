@@ -4,7 +4,7 @@ export const ajax = function (config) {
       // 2. 发起XHR请求，默认请求方法为GET
       const xhr = new XMLHttpRequest()
       xhr.open(config.method || 'GET', config.url)
-      xhr.setRequestHeader('Authorization', '2f3e1153a4ef0cc3a96fde17509a8a4b8cd428c5fbf0bf60e7133a1d3ca5a571');
+      xhr.setRequestHeader('Authorization', config.token);
       xhr.setRequestHeader('Content-Type','application/json')
 
       xhr.responseType = 'blob';   
@@ -21,13 +21,3 @@ export const ajax = function (config) {
     })
   }
    
-//   // 4. 使用myAxios函数，获取省份列表展示
-//   myAxios({
-//     url: '<http://hmajax.itheima.net/api/province>'
-//   }).then(result => {
-//     console.log(result)
-//     document.querySelector('.my-p').innerHTML = result.list.join('<br>')
-//   }).catch(error => {
-//     console.log(error)
-//     document.querySelector('.my-p').innerHTML = error.message
-//   })

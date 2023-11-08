@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+
+<head>
+    <title>微信语音样式</title>
+    <style type="text/css">
+
+
+        .box {
+            align-items: center;
+            box-sizing: border-box;
+            position: relative;
+            margin: 50px auto;
+            display: flex;
+        }
+
+        .box img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .wifi-symbol {
+            width: 50px;
+            height: 50px;
+            box-sizing: border-box;
+            overflow: hidden;
+            transform: rotate(135deg);
+            margin-left: 5px;
+        }
+
+        .wifi-circle {
+            border: 3px solid #999999;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+
+
+        .second {
+            width: 20px;
+            height: 20px;
+            top: 38px;
+            left: 38px;
+            animation: fadeInOut 1s infinite 0.2s;
+        }
+
+        .third {
+            width: 30px;
+            height: 30px;
+            top: 32px;
+            left: 32px;
+            animation: fadeInOut 1s infinite 0.4s;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                /*初始状态 透明度为0*/
+            }
+
+            100% {
+                opacity: 1;
+                /*结尾状态 透明度为1*/
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <img
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACfElEQVR4nO2WS3LaQBCGWy5gGy2yNzcIPkDKcIPkBJZPEKjisWS85FEFOUHwDXwDiRvgEwTfgKyhmHwNI16FQbgkr/iquqYH9XT/6pEGefIJDAaDokCtVpvKAZkK6Pf7D8vlsopbwpRRs9l8ZNzgYanT6/XK1toB7qqw53mvzH3cW+wOERPGFakKcIXbuGVZM/Y8zzQajajT6Rj8trX2qdVqGXGkIkD3eD6fa+FA1rx5nhdoYXE4caFNUwCFfQprqwNZ84YZWjySA1IVoIUXi8UvklWZ+tg//OFuYvcABnRiQidqHxJAIW3tLe4GEmqiKq6PrQoXCoUhr9iMeVzYEDdmOhKRYS6X+4HgIrGhTSLAqdXWlrCjUOCZxIbCUwG3po2rOatsw4RRut1uRKwR4HpozwlgQSAifzBh4SsLZrgrmH9h/jWfz38/VhgM7Y5kB/JFgiCu+cSF9pQAWq4P1V9cH3vkLkaygyumD1lZHPw2Elp9WPgQ4nRtaE8JIKhKgLb+N0WqjHtwXZPsCTgHHXhhMIk6EB8WWOXYHX1EgK7RXDqyNrSfLSDGrQ3tVcBVwFVAEgE3Nzc/6/W6HiB7uCTZCeDUCmT9PxBRpMK4h0tiuFaWC3FrQ3tKgELghKBvuFO6MRIRnc8YlRIWIOCO8SLIm0yA+0N6wb3H3mPKNhm26Rk/EYkFxLAdJTpQ5uPCZ7pBf5OtuMRCLhZwCrpU5AvHkOyBqXJWSKoCYrRLDEPsHlPeFZKJgBiX3MhWSMRWPe2eJS4mtFkIiHFFjBwRQrcC4RW3WQqIUSHC1lBMX2dlKmuKCKqoIHFkIiDG3XUg246MOUPKskOmApLwHwFGlT/2Uy6+AAAAAElFTkSuQmCC" />
+        <div class="wifi-symbol">
+            <div class="wifi-circle second"></div>
+            <div class="wifi-circle third"></div>
+        </div>
+    </div>
+</body>
+
+</html>

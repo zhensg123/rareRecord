@@ -3,31 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>测试代码</title>
+    <title>Document</title>
 </head>
 <body>
-    <script>
-        const p1 = {
-            toString(){
-                return 1
-            },
-            toLocaleString(){
-                return 2
-            }
-        }
-
-        const p2 = {
-            toString(){
-                return 3
-            },
-            toLocaleString(){
-                return 4
-            }
-        }
-        const arr = [p1, p2]
-        console.log(arr.toString()) // 1,3
-
-        console.log(arr.toLocaleString()) // 2,4
-    </script>
+    <div class="speaker">
+        <div class="sound-wave wave1"></div>
+        <div class="sound-wave wave2"></div>
+        <div class="sound-wave wave3"></div>
+      </div>
+    <style>
+        .speaker {
+    width: 50px;
+    height: 50px;
+    background: url('speaker-icon.png') no-repeat center center;
+    background-size: cover;
+    position: relative;
+  }
+  
+  .sound-wave {
+    position: absolute;
+    width: 2px;
+    height: 10px;
+    background: #000;
+    left: 55px;
+    bottom: 20px;
+    animation: wave 0.5s infinite linear;
+  }
+  
+  .wave1 {
+    animation-delay: 0s;
+  }
+  
+  .wave2 {
+    left: 60px;
+    animation-delay: 0.1s;
+  }
+  
+  .wave3 {
+    left: 65px;
+    animation-delay: 0.2s;
+  }
+  
+  @keyframes wave {
+    0%, 100% {
+      height: 10px;
+      opacity: 0.7;
+    }
+    50% {
+      height: 20px;
+      opacity: 1;
+    }
+  }
+    </style>
 </body>
 </html>
