@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数字人测试</title>
+  <link rel="stylesheet" href="/public/font/iconfont.css">
+  <style>
+    body {
+  --trajectory_time: 1s;
+  --trajectory_scale: 1s;
+}
+    .like-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: #ddd;
+      position: relative;
+      top: 360px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      left: 300px;
+      cursor: pointer;
+    }
+
+    .like-box i {
+      font-size: 25px;
+    }
+
+    .like-box div {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      /* background-image: url("./public/images/bg1.png"); */
+      background-size: cover;
+      z-index: -1;
+    }
+
+    /* div.release {
+
+      animation: upward 1s linear forwards,
+        scale 1s linear forwards,
+        opacity 1s linear forwards,
+        swing 1s linear forwards;
+    } */
+
+
+    .face1 {
+      background-image: url("./public/images/bg1.png");
+    }
+
+    .face2 {
+      background-image: url("./public/images/bg2.png");
+
+    }
+
+    .face3 {
+      background-image: url("./public/images/bg3.png");
+
+    }
+
+    .face4 {
+      background-image: url("./public/images/bg4.png");
+
+    }
+
+    .face5 {
+      background-image: url("./public/images/bg5.png");
+
+    }
+
+    .face6 {
+      background-image: url("./public/images/bg6.png");
+
+    }
+
+    .trajectory1 {
+      animation: swing_1 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    .trajectory2 {
+      animation: swing_2 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear  forwards;
+    }
+
+    .trajectory3 {
+      animation: swing_3 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    .trajectory4 {
+      animation: swing_4 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear  forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    .trajectory5 {
+      animation: swing_5 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    .trajectory6 {
+      animation: swing_6 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    .trajectory7 {
+      animation: swing_7 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    .trajectory8 {
+      animation: swing_8 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    .trajectory9 {
+      animation: swing_9 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    .trajectory10 {
+      animation: swing_10 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    .trajectory11 {
+      animation: swing_11 var(--trajectory_time) linear forwards,
+        scale var(--trajectory_scale) linear forwards,
+        opacity var(--trajectory_time) linear forwards;
+    }
+
+    @keyframes swing_11 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: -10px;
+      }
+
+      100% {
+        left: -18px;
+      }
+    }
+
+    @keyframes swing_10 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: -20px;
+      }
+
+      100% {
+        left: -20px;
+      }
+    }
+
+    @keyframes swing_9 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: 10px;
+      }
+
+      100% {
+        left: 10px;
+      }
+    }
+
+    @keyframes swing_8 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: 20px;
+      }
+
+      100% {
+        left: 20px;
+      }
+    }
+
+    @keyframes swing_7 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: 1px;
+      }
+
+      75% {
+        left: 2px;
+      }
+
+      100% {
+        left: 3px;
+      }
+    }
+
+    @keyframes swing_6 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: -1px;
+      }
+
+      75% {
+        left: -2px;
+      }
+
+      100% {
+        left: -3px;
+      }
+    }
+
+    @keyframes swing_5 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: -5px;
+      }
+
+      75% {
+        left: -10px;
+      }
+
+      100% {
+        left: -20px;
+      }
+    }
+
+    @keyframes swing_4 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: -5px;
+      }
+
+      75% {
+        left: 20px;
+      }
+
+      100% {
+        left: 10px;
+      }
+    }
+
+    @keyframes swing_3 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: 10px;
+      }
+
+      75% {
+        left: 20px;
+      }
+
+      100% {
+        left: -10px;
+      }
+    }
+
+    @keyframes swing_2 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: 25px;
+      }
+
+      75% {
+        left: 10px;
+      }
+
+      100% {
+        left: 5px;
+      }
+    }
+
+    @keyframes swing_1 {
+      0% {}
+
+      25% {
+        left: 0;
+      }
+
+      50% {
+        left: 8px;
+      }
+
+      75% {
+        left: -15px;
+      }
+
+      100% {
+        left: 15px;
+      }
+    }
+   /* div.scale {
+     animation: scale 1s linear forwards, opacity 1s linear forwards;
+   } */
+    @keyframes scale {
+      0% {
+        transform: scale(0.3);
+      }
+
+      100% {
+        transform: scale(1.2);
+      }
+    }
+
+
+    @keyframes opacity {
+      0% {
+        top: 0;
+      }
+
+      10% {
+        top: -10px;
+      }
+
+      75% {
+        opacity: 1;
+        top: -180px;
+
+      }
+
+      100% {
+        top: -200px;
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <!-- <script src="./src/index.js"></script> -->
+  <div class="like-box" id="like-box">
+    <i class="icon-dianzan iconfont"></i>
+  </div>
+</body>
+
+</html>
